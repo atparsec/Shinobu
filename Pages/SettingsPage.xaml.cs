@@ -13,6 +13,8 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -80,7 +82,12 @@ namespace Shinobu
             DictionaryComboBox.SelectedIndex = dict == "Jisho" ? 1 : 0;
 
             // LibraryFolder
-            LibraryFolderTextBox.Text = _localSettings.Values.TryGetValue("LibraryFolder", out var lf) ? lf as string ?? string.Empty : string.Empty;
+            var libraryPath = _localSettings.Values.TryGetValue("LibraryFolder", out var lf) ? lf as string : null;
+            if (string.IsNullOrEmpty(libraryPath))
+            {
+                libraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            }
+            LibraryFolderTextBox.Text = libraryPath;
         }
 
         private void SaveSettings()
@@ -218,6 +225,22 @@ namespace Shinobu
         private void LibraryFolderTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             SaveSettings();
+        }
+
+        private async void BrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new FolderPicker();
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindowInstance);
+            InitializeWithWindow.Initialize(folderPicker, hwnd);
+            folderPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+            folderPicker.FileTypeFilter.Add("*");
+
+            var folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                LibraryFolderTextBox.Text = folder.Path;
+                _localSettings.Values["LibraryFolder"] = folder.Path;
+            }
         }
     }
 }
