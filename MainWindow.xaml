@@ -22,7 +22,7 @@
         <TitleBar
         x:Name="titleBar"
         IsBackButtonVisible="{x:Bind navFrame.CanGoBack, Mode=OneWay}"
-            Title="Hitagi"
+            Title="Shinobu"
             Subtitle="Preview"
         >
             <TitleBar.IconSource>

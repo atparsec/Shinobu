@@ -8,7 +8,86 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid>
+    <ScrollViewer>
+        <StackPanel Padding="24" Spacing="20">
 
-    </Grid>
+            <!-- General -->
+            <TextBlock Text="General" FontSize="20" FontWeight="Bold" />
+            <StackPanel Margin="8,0,0,0" Spacing="12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Library Folder" VerticalAlignment="Center" Width="160" />
+                    <TextBox x:Name="LibraryFolderTextBox" Width="420" PlaceholderText="Select library folder..." />
+                    <Button Content="Browse" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Select Dictionary" VerticalAlignment="Center" Width="160" />
+                    <ComboBox x:Name="DictionaryComboBox" Width="200">
+                        <ComboBoxItem Content="Local" />
+                        <ComboBoxItem Content="Jisho" />
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Appearance -->
+            <TextBlock Text="Appearance" FontSize="20" FontWeight="Bold" />
+            <StackPanel Margin="8,0,0,0" Spacing="12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Theme" VerticalAlignment="Center" Width="160" />
+                    <ComboBox x:Name="ThemeComboBox" Width="200">
+                        <ComboBoxItem Content="Light" />
+                        <ComboBoxItem Content="Dark" />
+                        <ComboBoxItem Content="System Default" />
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- AI Features -->
+            <TextBlock Text="AI Features" FontSize="20" FontWeight="Bold" />
+            <StackPanel Margin="8,0,0,0" Spacing="12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Enable AI Features?" VerticalAlignment="Center" Width="160" />
+                    <ToggleSwitch x:Name="EnableAIFeaturesToggle" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Select AI Provider" VerticalAlignment="Center" Width="160" />
+                    <ComboBox x:Name="AIProviderComboBox" Width="200">
+                        <ComboBoxItem Content="Grok" />
+                        <ComboBoxItem Content="OpenAI" />
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Enter API Key" VerticalAlignment="Center" Width="160" />
+                    <PasswordBox x:Name="ApiKeyBox" Width="420" PlaceholderText="Paste API key here" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- About -->
+            <TextBlock Text="About" FontSize="20" FontWeight="Bold" />
+            <StackPanel Margin="8,0,0,0" Spacing="12">
+                <TextBlock TextWrapping="Wrap">
+                    TODO
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="Version" VerticalAlignment="Center" Width="160" />
+                    <TextBlock Text="1.0.0 (preview)" VerticalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Updates -->
+            <TextBlock Text="Updates" FontSize="20" FontWeight="Bold" />
+            <StackPanel Margin="8,0,0,0" Spacing="12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                    <TextBlock Text="Check for updates" VerticalAlignment="Center" Width="160" />
+                    <Button Content="Check Now" />
+                </StackPanel>
+
+                <TextBlock TextWrapping="Wrap" Foreground="Gray">TODO</TextBlock>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
 </Page>
