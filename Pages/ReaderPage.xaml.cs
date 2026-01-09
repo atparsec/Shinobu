@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
+using System.Text.RegularExpressions;
 
 namespace Shinobu.Pages
 {
@@ -23,8 +24,8 @@ namespace Shinobu.Pages
         private string _filePath = string.Empty;
         private List<string> _pages = new();
         private int _currentPage = 0;
-
         public event PropertyChangedEventHandler? PropertyChanged;
+        private FuriganaGenerator _furiganaGenerator = new();
 
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
@@ -105,8 +106,11 @@ namespace Shinobu.Pages
 
         private async Task<string> GenerateFurigana(string text)
         {
-            // TODO
-            return text.Replace("\n", "<br>");
+            if (text.Contains("<ruby>"))
+            {
+                return text;
+            }
+            return await _furiganaGenerator.GenerateHtmlFuriganaAsync(text);
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
