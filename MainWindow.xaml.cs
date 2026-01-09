@@ -26,6 +26,7 @@ namespace Shinobu
             InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
             this.SetTitleBar(titleBar);
+            navFrame.Navigate(typeof(LibraryPage));
         }
 
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -40,7 +41,7 @@ namespace Shinobu
                 switch (tag)
                 {
                     case "library":
-                        //navFrame.Navigate(typeof(LibraryPage));
+                        navFrame.Navigate(typeof(LibraryPage));
                         break;
                     case "reader":
                         //navFrame.Navigate(typeof(ReaderPage));
