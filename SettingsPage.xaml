@@ -8,85 +8,91 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <ScrollViewer>
-        <StackPanel Padding="24" Spacing="20">
+    <ScrollViewer x:Name="RootScrollViewer">
+        <StackPanel Padding="24" Spacing="30">
+            <TextBlock Text="Settings" FontSize="32" FontWeight="Bold" />
 
             <!-- General -->
-            <TextBlock Text="General" FontSize="20" FontWeight="Bold" />
-            <StackPanel Margin="8,0,0,0" Spacing="12">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Library Folder" VerticalAlignment="Center" Width="160" />
-                    <TextBox x:Name="LibraryFolderTextBox" Width="420" PlaceholderText="Select library folder..." />
-                    <Button Content="Browse" />
-                </StackPanel>
+            <Expander x:Name="GeneralSection" Header="General" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Margin="8,8,0,0" Spacing="12">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Library Folder" VerticalAlignment="Center" Width="160" />
+                        <TextBox x:Name="LibraryFolderTextBox" Width="420" PlaceholderText="Select library folder..." TextChanged="LibraryFolderTextBox_TextChanged"/>
+                        <Button Content="Browse" />
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Select Dictionary" VerticalAlignment="Center" Width="160" />
-                    <ComboBox x:Name="DictionaryComboBox" Width="200">
-                        <ComboBoxItem Content="Local" />
-                        <ComboBoxItem Content="Jisho" />
-                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Select Dictionary" VerticalAlignment="Center" Width="160" />
+                        <ComboBox x:Name="DictionaryComboBox" Width="200" SelectionChanged="DictionaryComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Local" />
+                            <ComboBoxItem Content="Jisho" />
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Expander>
 
             <!-- Appearance -->
-            <TextBlock Text="Appearance" FontSize="20" FontWeight="Bold" />
-            <StackPanel Margin="8,0,0,0" Spacing="12">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Theme" VerticalAlignment="Center" Width="160" />
-                    <ComboBox x:Name="ThemeComboBox" Width="200">
-                        <ComboBoxItem Content="Light" />
-                        <ComboBoxItem Content="Dark" />
-                        <ComboBoxItem Content="System Default" />
-                    </ComboBox>
+            <Expander x:Name="AppearanceSection" Header="Appearance" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Margin="8,8,0,0" Spacing="12">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Theme" VerticalAlignment="Center" Width="160" />
+                        <ComboBox x:Name="ThemeComboBox" Width="200" SelectionChanged="ThemeComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Light" />
+                            <ComboBoxItem Content="Dark" />
+                            <ComboBoxItem Content="System Default" />
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Expander>
 
             <!-- AI Features -->
-            <TextBlock Text="AI Features" FontSize="20" FontWeight="Bold" />
-            <StackPanel Margin="8,0,0,0" Spacing="12">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Enable AI Features?" VerticalAlignment="Center" Width="160" />
-                    <ToggleSwitch x:Name="EnableAIFeaturesToggle" />
-                </StackPanel>
+            <Expander x:Name="AIFeaturesSection" Header="AI Features" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Margin="8,8,0,0" Spacing="12">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Enable AI Features?" VerticalAlignment="Center" Width="160" />
+                        <ToggleSwitch x:Name="EnableAIFeaturesToggle" Toggled="EnableAIFeaturesToggle_Toggled"/>
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Select AI Provider" VerticalAlignment="Center" Width="160" />
-                    <ComboBox x:Name="AIProviderComboBox" Width="200">
-                        <ComboBoxItem Content="Grok" />
-                        <ComboBoxItem Content="OpenAI" />
-                    </ComboBox>
-                </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Select AI Provider" VerticalAlignment="Center" Width="160" />
+                        <ComboBox x:Name="AIProviderComboBox" Width="200" SelectionChanged="AIProviderComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Grok" />
+                            <ComboBoxItem Content="OpenAI" />
+                        </ComboBox>
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Enter API Key" VerticalAlignment="Center" Width="160" />
-                    <PasswordBox x:Name="ApiKeyBox" Width="420" PlaceholderText="Paste API key here" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Enter API Key" VerticalAlignment="Center" Width="160" />
+                        <PasswordBox x:Name="ApiKeyBox" Width="420" PlaceholderText="Paste API key here" PasswordChanged="ApiKeyBox_PasswordChanged" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Expander>
 
             <!-- About -->
-            <TextBlock Text="About" FontSize="20" FontWeight="Bold" />
-            <StackPanel Margin="8,0,0,0" Spacing="12">
-                <TextBlock TextWrapping="Wrap">
-                    TODO
-                </TextBlock>
+            <Expander x:Name="AboutSection" Header="About" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Margin="8,8,0,0" Spacing="12">
+                    <TextBlock TextWrapping="Wrap">
+                        TODO
+                    </TextBlock>
 
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Text="Version" VerticalAlignment="Center" Width="160" />
-                    <TextBlock Text="1.0.0 (preview)" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="Version" VerticalAlignment="Center" Width="160" />
+                        <TextBlock Text="1.0.0 (preview)" VerticalAlignment="Center" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Expander>
 
             <!-- Updates -->
-            <TextBlock Text="Updates" FontSize="20" FontWeight="Bold" />
-            <StackPanel Margin="8,0,0,0" Spacing="12">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                    <TextBlock Text="Check for updates" VerticalAlignment="Center" Width="160" />
-                    <Button Content="Check Now" />
-                </StackPanel>
+            <Expander x:Name="UpdatesSection" Header="Updates" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Margin="8,8,0,0" Spacing="12">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Check for updates" VerticalAlignment="Center" Width="160" />
+                        <Button Content="Check Now" />
+                    </StackPanel>
 
-                <TextBlock TextWrapping="Wrap" Foreground="Gray">TODO</TextBlock>
-            </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray">TODO</TextBlock>
+                </StackPanel>
+            </Expander>
 
         </StackPanel>
     </ScrollViewer>

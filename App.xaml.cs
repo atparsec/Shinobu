@@ -28,6 +28,8 @@ namespace Shinobu
     {
         private Window? _window;
 
+        public static Window? MainWindowInstance { get; private set; }
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -44,6 +46,7 @@ namespace Shinobu
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
+            MainWindowInstance = _window;
             _window.Activate();
         }
     }
