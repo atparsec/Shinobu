@@ -32,7 +32,7 @@ namespace Shinobu
         {
             if (args.IsSettingsInvoked)
             {
-                //navFrame.Navigate(typeof(SettingsPage));
+                navFrame.Navigate(typeof(SettingsPage));
             }
             else if (args.InvokedItemContainer is NavigationViewItem item)
             {
@@ -42,8 +42,8 @@ namespace Shinobu
                     case "library":
                         //navFrame.Navigate(typeof(LibraryPage));
                         break;
-                    case "settings":
-                        //navFrame.Navigate(typeof(SettingsPage));
+                    case "reader":
+                        //navFrame.Navigate(typeof(ReaderPage));
                         break;
                     case "words":
                         //navFrame.Navigate(typeof(WordsPage));
@@ -57,6 +57,22 @@ namespace Shinobu
             if (navFrame.CanGoBack)
             {
                 navFrame.GoBack();
+            }
+        }
+
+        private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            if (navFrame.Content is ISearchProvider provider)
+            {
+                provider.OnQuerySubmitted(sender, args);
+            }
+        }
+
+        private void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (navFrame.Content is ISearchProvider provider)
+            {
+                provider.OnTextChanged(sender, args);
             }
         }
     }

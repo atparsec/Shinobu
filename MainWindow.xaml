@@ -31,10 +31,13 @@
 
             <TitleBar.Content>
                 <AutoSuggestBox
+                    x:Name="searchBox"
                     Width="360"
                     VerticalAlignment="Center"
                     PlaceholderText="Search.."
-                    QueryIcon="Find" />
+                    QueryIcon="Find"
+                    TextChanged="SearchBox_TextChanged"
+                    QuerySubmitted="SearchBox_QuerySubmitted" />
             </TitleBar.Content>
 
         </TitleBar>
