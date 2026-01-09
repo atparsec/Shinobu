@@ -9,12 +9,15 @@
     mc:Ignorable="d">
 
     <Grid>
-
         <WebView2
             x:Name="ReaderWebView"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" 
-            Source="https://learn.microsoft.com/windows/apps/winui/winui3/"/>
+            VerticalAlignment="Stretch" />
 
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,20" Spacing="20">
+            <Button x:Name="PrevButton" Content="Previous" Click="PrevButton_Click" IsEnabled="{x:Bind CanGoPrev, Mode=OneWay}" />
+            <TextBlock x:Name="PageTextBlock" Text="{x:Bind PageText, Mode=OneWay}" VerticalAlignment="Center" />
+            <Button x:Name="NextButton" Content="Next" Click="NextButton_Click" IsEnabled="{x:Bind CanGoNext, Mode=OneWay}" />
+        </StackPanel>
     </Grid>
 </Page>

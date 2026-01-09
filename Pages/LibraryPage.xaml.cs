@@ -128,5 +128,23 @@ namespace Shinobu.Pages
                 SaveFavorites();
             }
         }
+
+        private void BookCard_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (sender is StackPanel sp && sp.DataContext is BookItem item)
+            {
+                Frame.Navigate(typeof(ReaderPage), item.Path);
+            }
+        }
+    }
+
+    internal class BookItem
+    {
+        public string FileName { get; set; } = string.Empty;
+        public long FileSize { get; set; }
+        public string DateModified { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+        public bool IsFavorite { get; set; }
+        public string PreviewText { get; set; } = string.Empty;
     }
 }

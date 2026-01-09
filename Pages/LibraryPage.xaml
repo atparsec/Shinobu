@@ -36,7 +36,8 @@
                             Shadow="{ThemeResource CommandBarFlyoutOverflowShadow}"
                         Spacing="10"
                         PointerEntered="Card_PointerEntered"
-                        PointerExited="Card_PointerExited">
+                        PointerExited="Card_PointerExited"
+                        Tapped="BookCard_Tapped">
 
                             <TextBlock
                             Text="{Binding FileName}"
@@ -97,7 +98,8 @@
                         Shadow="{ThemeResource CommandBarFlyoutOverflowShadow}"
                     Spacing="10"
                     PointerEntered="Card_PointerEntered"
-                    PointerExited="Card_PointerExited">
+                    PointerExited="Card_PointerExited"
+                    Tapped="BookCard_Tapped">
 
                         <TextBlock
                         Text="{Binding FileName}"
