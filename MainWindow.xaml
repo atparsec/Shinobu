@@ -14,6 +14,54 @@
     </Window.SystemBackdrop>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
+        <TitleBar
+        x:Name="titleBar"
+        IsBackButtonVisible="{x:Bind navFrame.CanGoBack, Mode=OneWay}"
+            Title="Hitagi"
+            Subtitle="Preview"
+        >
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="/Assets/Square44x44Logo.png"/>
+            </TitleBar.IconSource>
+
+            <TitleBar.Content>
+                <AutoSuggestBox
+                    Width="360"
+                    VerticalAlignment="Center"
+                    PlaceholderText="Search.."
+                    QueryIcon="Find" />
+            </TitleBar.Content>
+
+        </TitleBar>
+
+        <NavigationView
+        x:Name="navView"
+        Grid.Row="1"
+        IsBackButtonVisible="Collapsed"
+        IsPaneToggleButtonVisible="True"
+        ItemInvoked="NavView_ItemInvoked"
+        BackRequested="NavView_BackRequested"
+        >
+            <NavigationView.MenuItems>
+                <NavigationViewItem
+                    Content="Library"
+                    Icon="Library"
+                    Tag="library" />
+                <NavigationViewItem
+                    Content="Reader"
+                    Icon="TwoPage"
+                    Tag="reader" />
+                <NavigationViewItem
+                    Content="Saved Words"
+                    Icon="Tag"
+                    Tag="words" />
+            </NavigationView.MenuItems>
+            <Frame x:Name="navFrame" />
+        </NavigationView>
     </Grid>
 </Window>
