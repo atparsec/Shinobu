@@ -79,12 +79,20 @@ namespace Shinobu.Pages
             var settings = ApplicationData.Current.LocalSettings;
             var fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
             var lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 1.2;
+            var theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
+            var backgroundColor = "#FFF";
+            var textColor = "#000";
+            if (theme == "Dark" || (theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
+            {
+                backgroundColor = "#000";
+                textColor = "#fff";
+            }
 
             var html = $@"
     <html>
     <head>
     <style>
-    body {{ background-color: #000; color: #fff; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
+    body {{ background-color: {backgroundColor}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
     </style>
     </head>
     <body>
