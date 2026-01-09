@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Shinobu (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Shinobu (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
