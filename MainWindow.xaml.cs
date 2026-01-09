@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Shinobu.Pages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,7 +45,7 @@ namespace Shinobu
                         navFrame.Navigate(typeof(LibraryPage));
                         break;
                     case "reader":
-                        //navFrame.Navigate(typeof(ReaderPage));
+                        navFrame.Navigate(typeof(ReaderPage));
                         break;
                     case "words":
                         //navFrame.Navigate(typeof(WordsPage));

@@ -8,9 +8,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+            <local:BoolToStringConverter x:Key="BoolToStringConverter" TrueValue="★" FalseValue="☆" />
+            <local:FileSizeConverter x:Key="FileSizeConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

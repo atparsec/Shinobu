@@ -15,6 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="LibraryPage.xaml" />
+    <None Remove="Pages\ReaderPage.xaml" />
     <None Remove="SettingsPage.xaml" />
   </ItemGroup>
 
@@ -60,7 +61,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Pages\" />
+    <Page Update="Pages\ReaderPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!--
