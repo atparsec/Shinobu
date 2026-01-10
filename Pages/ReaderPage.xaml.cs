@@ -18,7 +18,7 @@ namespace Shinobu.Pages
     public sealed partial class ReaderPage : Page, INotifyPropertyChanged
     {
         private string _filePath = string.Empty;
-        private List<string> _pages = new();
+        private List<string> _pages = [];
         private int _currentPage = 0;
         private bool _isDialogShowing = false;
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -55,7 +55,7 @@ namespace Shinobu.Pages
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
 
-        private async void ReaderWebView_NavigationCompleted(WebView2 sender,CoreWebView2NavigationCompletedEventArgs args)
+        private async void ReaderWebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
         {
             await sender.ExecuteScriptAsync(@"
         if (!window.__selectionListenerAttached) {

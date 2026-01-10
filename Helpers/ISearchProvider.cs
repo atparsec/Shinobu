@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 
-namespace Shinobu
+namespace Shinobu.Helpers
 {
     public interface ISearchProvider
     {
