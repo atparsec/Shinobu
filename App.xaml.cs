@@ -1,22 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using System.ComponentModel;
-using System.Text.Json;
+using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -31,6 +17,7 @@ namespace Shinobu
         private Window? _window;
 
         public static Window? MainWindowInstance { get; private set; }
+        private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -50,6 +37,25 @@ namespace Shinobu
             _window = new MainWindow();
             MainWindowInstance = _window;
             _window.Activate();
+            UpdateTheme();
+        }
+
+        private void UpdateTheme()
+        {
+            if (_window != null)
+            {
+                var theme = _localSettings.Values.TryGetValue("Theme", out var t) ? t as string : "";
+                ElementTheme requestedTheme = theme switch
+                {
+                    "Light" => ElementTheme.Light,
+                    "Dark" => ElementTheme.Dark,
+                    _ => ElementTheme.Default
+                };
+                if (App.MainWindowInstance is Window w && w.Content is FrameworkElement fe)
+                {
+                    fe.RequestedTheme = requestedTheme;
+                }
+            }
         }
     }
 

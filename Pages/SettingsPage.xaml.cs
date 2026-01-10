@@ -2,12 +2,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.UI.Popups;
 using WinRT.Interop;
 
 namespace Shinobu.Pages
@@ -238,29 +236,21 @@ namespace Shinobu.Pages
 
         private void AIProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_isLoading) return;
-
             SaveSettings();
         }
 
         private void ApiKeyBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (_isLoading) return;
-
             SaveSettings();
         }
 
         private void DictionaryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_isLoading) return;
-
             SaveSettings();
         }
 
         private void LibraryFolderTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (_isLoading) return;
-
             SaveSettings();
         }
 
