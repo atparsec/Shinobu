@@ -24,11 +24,62 @@ namespace Shinobu.Pages
         public event PropertyChangedEventHandler? PropertyChanged;
         private FuriganaGenerator _furiganaGenerator = new();
         private JlptLevel _userJlptLevel;
+        private bool _isVerticalText;
+        private double _fontSize;
+        private double _lineHeight;
 
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
         public string PageText => $"{_currentPage + 1} / {_pages.Count}";
         public List<JlptLevel> JlptLevels { get; } = Enum.GetValues<JlptLevel>().ToList();
+
+        public bool IsVerticalText
+        {
+            get => _isVerticalText;
+            set
+            {
+                if (_isVerticalText != value)
+                {
+                    _isVerticalText = value;
+                    var settings = ApplicationData.Current.LocalSettings;
+                    settings.Values["IsVerticalText"] = value;
+                    _ = DisplayCurrentPage();
+                    OnPropertyChanged(nameof(IsVerticalText));
+                }
+            }
+        }
+
+        public double FontSize
+        {
+            get => _fontSize;
+            set
+            {
+                if (_fontSize != value)
+                {
+                    _fontSize = value;
+                    var settings = ApplicationData.Current.LocalSettings;
+                    settings.Values["FontSize"] = value;
+                    _ = DisplayCurrentPage();
+                    OnPropertyChanged(nameof(FontSize));
+                }
+            }
+        }
+
+        public double LineHeight
+        {
+            get => _lineHeight;
+            set
+            {
+                if (_lineHeight != value)
+                {
+                    _lineHeight = value;
+                    var settings = ApplicationData.Current.LocalSettings;
+                    settings.Values["LineHeight"] = value;
+                    _ = DisplayCurrentPage();
+                    OnPropertyChanged(nameof(LineHeight));
+                }
+            }
+        }
 
         public JlptLevel UserJlptLevel
         {
@@ -51,6 +102,9 @@ namespace Shinobu.Pages
             InitializeComponent();
             var settings = ApplicationData.Current.LocalSettings;
             _userJlptLevel = settings.Values.TryGetValue("JlptLevel", out var levelObj) && levelObj is int levelInt ? (JlptLevel)levelInt : JlptLevel.N5;
+            _isVerticalText = settings.Values.TryGetValue("IsVerticalText", out var vt) && vt is bool b && b;
+            _fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
+            _lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -151,8 +205,8 @@ namespace Shinobu.Pages
 
             // set to webview
             var settings = ApplicationData.Current.LocalSettings;
-            var fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
-            var lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
+            var fontSize = _fontSize;
+            var lineHeight = _lineHeight;
             var theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
             var backgroundColor = "#FFF";
             var shadowColor = "#EEEEEEFF";
@@ -165,11 +219,17 @@ namespace Shinobu.Pages
             }
             var gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
+            var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px;";
+            if (_isVerticalText)
+            {
+                bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed;";
+            }
+
             var html = $@"
     <html>
     <head>
     <style>
-    body {{ background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
+    body {{ {bodyStyle} }}
     rt {{user-select: none; pointer-events: none;}}
     </style>
     </head>
@@ -183,6 +243,11 @@ namespace Shinobu.Pages
         private async Task<string> GenerateFurigana(string text)
         {
             return (await _furiganaGenerator.GenerateHtmlFuriganaAsync(text, UserJlptLevel)).Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+        }
+
+        public async Task UpdateDisplayAsync()
+        {
+            await DisplayCurrentPage();
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
@@ -210,7 +275,7 @@ namespace Shinobu.Pages
             var dialog = new ContentDialog()
             {
                 Title = "Page Options",
-                Content = new TextBlock() { Text = "Options here" },
+                Content = new PageOptionsDialog(this),
                 CloseButtonText = "Close",
                 XamlRoot = this.XamlRoot
             };
