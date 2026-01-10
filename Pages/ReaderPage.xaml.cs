@@ -60,10 +60,28 @@ namespace Shinobu.Pages
             var settings = ApplicationData.Current.LocalSettings;
             _userJlptLevel = settings.Values.TryGetValue("JlptLevel", out var levelObj) && levelObj is int levelInt ? (JlptLevel)levelInt : JlptLevel.N5;
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
+            ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
+
+        private async void ReaderWebView_NavigationCompleted(WebView2 sender,CoreWebView2NavigationCompletedEventArgs args)
+        {
+            await sender.ExecuteScriptAsync(@"
+        if (!window.__selectionListenerAttached) {
+            document.addEventListener('mouseup', function () {
+                var selectedText = window.getSelection().toString();
+                if (selectedText.trim()) {
+                    window.chrome.webview.postMessage('selected:' + selectedText);
+                }
+            });
+            window.__selectionListenerAttached = true;
+        }
+        ");
+        }
+
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            await ReaderWebView.EnsureCoreWebView2Async();
             if (e.Parameter is string path)
             {
                 _filePath = path;
@@ -95,6 +113,8 @@ namespace Shinobu.Pages
                 ReaderSessionManager.SaveSession(_filePath, _currentPage);
             }
             base.OnNavigatingFrom(e);
+            ReaderWebView.NavigationCompleted -= ReaderWebView_NavigationCompleted;
+            ReaderWebView.WebMessageReceived -= OnWebMessageReceived;
         }
 
         private async Task LoadBook()
@@ -153,16 +173,7 @@ namespace Shinobu.Pages
     {furiganaText}
     </body>
     </html>";
-            await ReaderWebView.EnsureCoreWebView2Async();
             ReaderWebView.NavigateToString(html);
-            await ReaderWebView.ExecuteScriptAsync(@"
-                document.addEventListener('mouseup', function() {
-                    var selectedText = window.getSelection().toString();
-                    if (selectedText.trim()) {
-                        window.chrome.webview.postMessage('selected:' + selectedText);
-                    }
-                });
-            ");
         }
 
         private async Task<string> GenerateFurigana(string text)
