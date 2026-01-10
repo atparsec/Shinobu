@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.UI.Popups;
 
 namespace Shinobu.Pages
 {
@@ -148,6 +149,13 @@ namespace Shinobu.Pages
                 if (sessionFilePath != null && File.Exists(sessionFilePath))
                 {
                     _filePath = sessionFilePath;
+                    if (!File.Exists(_filePath))
+                    {
+                        ReaderSessionManager.ClearSession();
+                        MessageDialog info = new("The file from your last reading session could not be found.", "File Not Found");
+                        await info.ShowAsync();
+                        return;
+                    }
                     await LoadBook();
                     _currentPage = Math.Min(sessionPage, _pages.Count - 1);
                     OnPropertyChanged();
@@ -308,6 +316,7 @@ namespace Shinobu.Pages
                 (this.Content as Panel)?.Children.Remove(overlay);
                 (this.Content as Panel)?.Children.Remove(dialog);
                 _isDialogShowing = false;
+                _ = ReaderWebView.ExecuteScriptAsync("window.getSelection().removeAllRanges();");
             };
             dialog.CloseAction = closeDialog;
             overlay.PointerPressed += (s, e) => closeDialog();
