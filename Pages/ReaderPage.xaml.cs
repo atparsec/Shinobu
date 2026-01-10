@@ -222,7 +222,7 @@ namespace Shinobu.Pages
             var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px;";
             if (_isVerticalText)
             {
-                bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed;";
+                bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
             }
 
             var html = $@"
