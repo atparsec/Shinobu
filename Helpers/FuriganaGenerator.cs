@@ -1,20 +1,23 @@
 ﻿using Kawazu;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shinobu.Pages
+namespace Shinobu.Helpers
 {
     public class FuriganaGenerator
     {
         private readonly KawazuConverter _converter;
+        private static readonly JLPTKanji _jlptKanji = new();
 
         public FuriganaGenerator()
         {
             _converter = new KawazuConverter();
         }
 
-        public async Task<string> GenerateHtmlFuriganaAsync(string text)
+        public async Task<string> GenerateHtmlFuriganaAsync(string text, JlptLevel level)
         {
             if (string.IsNullOrWhiteSpace(text)) return text;
             if (text.Contains("<ruby>")) return text; // already has → skip
@@ -40,6 +43,13 @@ namespace Shinobu.Pages
                     int kanjiLength = surface.Length;
                     while (kanjiLength > 0 && Utilities.IsKana(surface[kanjiLength - 1]))
                         kanjiLength--;
+
+                    if (IsAllKnownKanji(surface, level))
+                    {
+                        // All kanji known → skip furigana for this part
+                        sb.Append(surface);
+                        continue;
+                    }
 
                     if (kanjiLength == surface.Length)
                     {
@@ -76,5 +86,18 @@ namespace Shinobu.Pages
         {
             return s.Any(c => c >= '\u4E00' && c <= '\u9FFF');
         }
+
+        private static bool IsAllKnownKanji(string surface, JlptLevel level)
+        {
+            if (level == JlptLevel.N1)
+                return true; // If N1 specified, all kanji are considered "known" to be ignored
+            var kanjiChars = surface.Where(c => c >= '\u4E00' && c <= '\u9FFF').ToList();
+            var knownKanjiSet = _jlptKanji.KanjiLevels[level];
+            if (knownKanjiSet == null)
+                return false;
+            return kanjiChars.All(c => knownKanjiSet.Contains(c));
+
+        }
+
     }
 }
