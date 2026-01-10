@@ -1,25 +1,17 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
-using Shinobu.Helpers;
 using Shinobu.Dialogs;
+using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
-using Windows.System;
 
 namespace Shinobu.Pages
 {
@@ -163,18 +155,21 @@ namespace Shinobu.Pages
             var lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
             var theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
             var backgroundColor = "#FFF";
+            var shadowColor = "#EEEEEEFF";
             var textColor = "#000";
             if (theme == "Dark" || (theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
             {
                 backgroundColor = "#000";
+                shadowColor = "#151515FF";
                 textColor = "#fff";
             }
+            var gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
             var html = $@"
     <html>
     <head>
     <style>
-    body {{ background-color: {backgroundColor}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
+    body {{ background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
     rt {{user-select: none; pointer-events: none;}}
     </style>
     </head>
