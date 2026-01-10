@@ -1,111 +1,142 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.UI.Popups;
 using WinRT.Interop;
 
 namespace Shinobu.Pages
 {
     public sealed partial class SettingsPage : Page, ISearchProvider
     {
-        private readonly List<string> _settingsItems = new()
-        {
+        private readonly List<string> _settingSections =
+        [
             "General",
             "Appearance",
             "AI Features",
             "About",
             "Updates"
-        };
+        ];
 
-        private ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
+        private static class SettingKeys
+        {
+            public const string Theme = "Theme";
+            public const string AIEnabled = "AIEnabled";
+            public const string AIProvider = "AIProvider";
+            public const string ApiKey = "ApiKey";
+            public const string Dictionary = "Dictionary";
+            public const string LibraryFolder = "LibraryFolder";
+        }
+
+        private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
+        private bool _isLoading = false;
 
         public SettingsPage()
         {
             InitializeComponent();
-            LoadSettingsToUi();
+            
+            Loaded += (s, e) => LoadSettingsToUi();
+
         }
 
         private void LoadSettingsToUi()
         {
-            // Theme default: System
-            var theme = _localSettings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
+            _isLoading = true;
+           
+            // Theme
+            var theme = _localSettings.Values.TryGetValue(SettingKeys.Theme, out var t) ? t as string : null;
             if (theme != null)
             {
-                switch (theme)
+                ThemeComboBox.SelectedIndex = theme switch
                 {
-                    case "Light":
-                        ThemeComboBox.SelectedIndex = 0;
-                        break;
-                    case "Dark":
-                        ThemeComboBox.SelectedIndex = 1;
-                        break;
-                    default:
-                        ThemeComboBox.SelectedIndex = 2;
-                        break;
-                }
+                    "Light" => 0,
+                    "Dark" => 1,
+                    _ => 2
+                };
             }
 
             // AI Features
-            var aiEnabled = _localSettings.Values.TryGetValue("AIEnabled", out var a) && a is bool ab && ab;
-            EnableAIFeaturesToggle.IsOn = aiEnabled;
-            AIProviderComboBox.IsEnabled = aiEnabled;
-            ApiKeyBox.IsEnabled = aiEnabled;
-
-            var provider = _localSettings.Values.TryGetValue("AIProvider", out var p) ? p as string : "Grok";
-            if (provider != null)
+            if (_localSettings.Values.TryGetValue(SettingKeys.AIEnabled, out var a) && a is bool ab)
             {
-                AIProviderComboBox.SelectedIndex = provider == "OpenAI" ? 1 : 0;
+                EnableAIFeaturesToggle.IsOn = ab;
+            }
+            else
+            {
+                EnableAIFeaturesToggle.IsOn = false;
+            }
+            AIProviderComboBox.IsEnabled = EnableAIFeaturesToggle.IsOn;
+            ApiKeyBox.IsEnabled = EnableAIFeaturesToggle.IsOn;
+
+            // AI Provider
+            if (_localSettings.Values.TryGetValue(SettingKeys.AIProvider, out var p) && p is string ps)
+            {
+                AIProviderComboBox.SelectedIndex = ps switch
+                {
+                    "Grok" => 0,
+                    "OpenAI" => 1,
+                    _ => 0
+                };
+            }
+            else
+            {
+                AIProviderComboBox.SelectedIndex = 0;
             }
 
-            ApiKeyBox.Password = _localSettings.Values.TryGetValue("ApiKey", out var k) ? k as string ?? string.Empty : string.Empty;
+            ApiKeyBox.Password = _localSettings.Values.TryGetValue(SettingKeys.ApiKey, out var k) ? k as string ?? string.Empty : string.Empty;
 
             // Dictionary
-            var dict = _localSettings.Values.TryGetValue("Dictionary", out var d) ? d as string : "Local";
-            DictionaryComboBox.SelectedIndex = dict == "Jisho" ? 1 : 0;
+            if (_localSettings.Values.TryGetValue(SettingKeys.Dictionary, out var d) && d is string dict)
+            {
+                DictionaryComboBox.SelectedIndex = dict == "Jisho" ? 1 : 0;
+            }
+            else
+            {
+                DictionaryComboBox.SelectedIndex = 0;
+            }
 
             // LibraryFolder
-            var libraryPath = _localSettings.Values.TryGetValue("LibraryFolder", out var lf) ? lf as string : null;
-            if (string.IsNullOrEmpty(libraryPath))
+            if (_localSettings.Values.TryGetValue(SettingKeys.LibraryFolder, out var lf) && lf is string libraryPath)
             {
-                libraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                LibraryFolderTextBox.Text = libraryPath;
             }
-            LibraryFolderTextBox.Text = libraryPath;
+            else
+            {
+                var defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                LibraryFolderTextBox.Text = defaultPath;
+            }
+
+            _isLoading = false;
         }
 
         private void SaveSettings()
         {
-            var theme = ThemeComboBox.SelectedItem is ComboBoxItem ci && ci.Content is string s ? s : "System";
-            _localSettings.Values["Theme"] = theme;
+            if (_isLoading) return;
 
-            _localSettings.Values["AIEnabled"] = EnableAIFeaturesToggle.IsOn;
+            var theme = ThemeComboBox.SelectedItem is ComboBoxItem ci && ci.Content is string s ? s : "System";
+            _localSettings.Values[SettingKeys.Theme] = theme;
+
+            _localSettings.Values[SettingKeys.AIEnabled] = EnableAIFeaturesToggle.IsOn;
 
             var provider = AIProviderComboBox.SelectedItem is ComboBoxItem pic && pic.Content is string ps ? ps : "Grok";
-            _localSettings.Values["AIProvider"] = provider;
+            _localSettings.Values[SettingKeys.AIProvider] = provider;
 
-            _localSettings.Values["ApiKey"] = ApiKeyBox.Password;
+            _localSettings.Values[SettingKeys.ApiKey] = ApiKeyBox.Password;
 
             var dict = DictionaryComboBox.SelectedItem is ComboBoxItem dic && dic.Content is string ds ? ds : "Local";
-            _localSettings.Values["Dictionary"] = dict;
+            _localSettings.Values[SettingKeys.Dictionary] = dict;
 
-            _localSettings.Values["LibraryFolder"] = LibraryFolderTextBox.Text;
+            _localSettings.Values[SettingKeys.LibraryFolder] = LibraryFolderTextBox.Text;
         }
 
         public void OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             string query = args.QueryText ?? string.Empty;
-            var match = _settingsItems.FirstOrDefault(s => s.Equals(query, StringComparison.OrdinalIgnoreCase));
+            var match = _settingSections.FirstOrDefault(s => s.Equals(query, StringComparison.OrdinalIgnoreCase));
             if (match is not null)
             {
                 ScrollToSection(match);
@@ -127,7 +158,7 @@ namespace Shinobu.Pages
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             {
                 string text = sender.Text ?? string.Empty;
-                var suggestions = _settingsItems
+                var suggestions = _settingSections
                     .Where(s => s.Contains(text, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
@@ -174,6 +205,8 @@ namespace Shinobu.Pages
 
         private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isLoading) return;
+
             if (ThemeComboBox.SelectedItem is ComboBoxItem ci && ci.Content is string s)
             {
                 ElementTheme requestedTheme = s switch
@@ -194,6 +227,8 @@ namespace Shinobu.Pages
 
         private void EnableAIFeaturesToggle_Toggled(object sender, RoutedEventArgs e)
         {
+            if (_isLoading) return;
+
             var enabled = EnableAIFeaturesToggle.IsOn;
             AIProviderComboBox.IsEnabled = enabled;
             ApiKeyBox.IsEnabled = enabled;
@@ -203,21 +238,29 @@ namespace Shinobu.Pages
 
         private void AIProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isLoading) return;
+
             SaveSettings();
         }
 
         private void ApiKeyBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            if (_isLoading) return;
+
             SaveSettings();
         }
 
         private void DictionaryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isLoading) return;
+
             SaveSettings();
         }
 
         private void LibraryFolderTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (_isLoading) return;
+
             SaveSettings();
         }
 
@@ -234,6 +277,7 @@ namespace Shinobu.Pages
             {
                 LibraryFolderTextBox.Text = folder.Path;
                 _localSettings.Values["LibraryFolder"] = folder.Path;
+                SaveSettings();
             }
         }
     }
