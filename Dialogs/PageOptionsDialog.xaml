@@ -6,12 +6,124 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    MaxWidth="600"
-    MinWidth="600"
-    MinHeight="500"
-    >
+    MaxWidth="640"
+    MinWidth="640"
+    MinHeight="400">
 
     <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="32">
 
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Font Options" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                        <TextBlock Text="Font Family" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="Medium"
+                                   MinWidth="100"/>
+                        <ComboBox x:Name="FontFamilyComboBox" 
+                                  Width="240" 
+                                  PlaceholderText="Select font..." 
+                                  SelectionChanged="FontFamilyComboBox_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                        <TextBlock Text="Font Size" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="Medium"
+                                   MinWidth="100"/>
+                        <ComboBox x:Name="FontSizeComboBox" 
+                                  Width="140" 
+                                  SelectionChanged="FontSizeComboBox_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                        <TextBlock Text="Style" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="Medium"
+                                   MinWidth="100"/>
+                        <Button x:Name="BoldButton"    Content="B" FontWeight="Bold"   Width="48" Click="StyleButton_Click" Tag="Bold"/>
+                        <Button x:Name="ItalicButton"  Content="I" FontStyle="Italic" Width="48" Click="StyleButton_Click" Tag="Italic"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Page" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Margin="0,8,0,8"/>
+
+                    <TextBlock Text="Orientation" FontWeight="Medium" Margin="0,0,0,8"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Left">
+                        <!-- Horizontal layout preview -->
+                        <RadioButton x:Name="HorizontalRadio" 
+                                     GroupName="PageOrientation"
+                                     Checked="OrientationRadio_Checked"
+                                     Style="{StaticResource RadioButtonWithPreview}">
+                            <StackPanel Orientation="Vertical" Spacing="8">
+                                <Border Background="#222" CornerRadius="6" Padding="12" Width="140" Height="90">
+                                    <StackPanel Orientation="Vertical" Spacing="6">
+                                        <Rectangle Fill="Gray" Width="130" Height="10"/>
+                                        <Rectangle Fill="Gray" Width="130" Height="10"/>
+                                        <Rectangle Fill="Gray" Width="130" Height="10"/>
+                                        <Rectangle Fill="Gray" Width="130" Height="10"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="Horizontal" 
+                                           HorizontalAlignment="Center" 
+                                           FontSize="13"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <!-- Vertical layout preview -->
+                        <RadioButton x:Name="VerticalRadio" 
+                                     GroupName="PageOrientation"
+                                     Checked="OrientationRadio_Checked"
+                                     Style="{StaticResource RadioButtonWithPreview}">
+                            <StackPanel Orientation="Vertical" Spacing="8">
+                                <Border Background="#222" CornerRadius="6" Padding="12" Width="140" Height="90">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="Vertical" 
+                                           HorizontalAlignment="Center" 
+                                           FontSize="13"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,16,0,0">
+                        <TextBlock Text="Page Margin" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="Medium"
+                                   MinWidth="100"/>
+                        <ComboBox x:Name="PageMarginComboBox" 
+                                  Width="160" 
+                                  SelectionChanged="PageMarginComboBox_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock Text="Line Spacing" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="Medium"
+                                   MinWidth="100"/>
+                        <ComboBox x:Name="LineSpacingComboBox" 
+                                  Width="160" 
+                                  SelectionChanged="LineSpacingComboBox_SelectionChanged"/>
+                    </StackPanel>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>
