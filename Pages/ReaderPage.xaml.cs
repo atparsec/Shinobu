@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using Shinobu.Helpers;
+using Shinobu.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -119,10 +120,7 @@ namespace Shinobu.Pages
     <head>
     <style>
     body {{ background-color: {backgroundColor}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
-    rt {{-webkit - user - select: none; /* For Safari */
-    -ms-user-select: none; /* For Internet Explorer */
-    user-select: none; /* Non-selectable for other browsers */
-    }}
+    rt {{user-select: none;}}
     </style>
     </head>
     <body>
@@ -192,15 +190,25 @@ namespace Shinobu.Pages
         {
             if (_isDialogShowing) return;
             _isDialogShowing = true;
-            var dialog = new ContentDialog()
+            var dialog = new SelectionDialog(text);
+            var overlay = new Grid
             {
-                Title = "Selected Text",
-                Content = new TextBlock() { Text = text },
-                CloseButtonText = "Close",
-                XamlRoot = this.XamlRoot
+                Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
-            await dialog.ShowAsync();
-            _isDialogShowing = false;
+            Action closeDialog = () =>
+            {
+                (this.Content as Panel)?.Children.Remove(overlay);
+                (this.Content as Panel)?.Children.Remove(dialog);
+                _isDialogShowing = false;
+            };
+            dialog.CloseAction = closeDialog;
+            overlay.PointerPressed += (s, e) => closeDialog();
+            (this.Content as Panel)?.Children.Add(overlay);
+            (this.Content as Panel)?.Children.Add(dialog);
+            dialog.HorizontalAlignment = HorizontalAlignment.Center;
+            dialog.VerticalAlignment = VerticalAlignment.Center;
         }
 
         private void OnPropertyChanged(string? propertyName = null)

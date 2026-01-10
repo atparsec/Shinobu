@@ -34,6 +34,7 @@ namespace Shinobu
             this.ExtendsContentIntoTitleBar = true;
             this.SetTitleBar(titleBar);
             navFrame.Navigate(typeof(LibraryPage));
+            navView.SelectedItem = navView.MenuItems[0];
         }
 
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
