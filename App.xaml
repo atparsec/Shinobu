@@ -12,6 +12,13 @@
             <local:BoolToStringConverter x:Key="BoolToStringConverter" TrueValue="★" FalseValue="☆" />
             <local:FileSizeConverter x:Key="FileSizeConverter" />
             <FontFamily x:Key="JapaneseFont">Yu Gothic UI, Meiryo, Segoe UI, sans-serif</FontFamily>
+            <Style x:Key="RadioButtonWithPreview" TargetType="RadioButton" BasedOn="{StaticResource DefaultRadioButtonStyle}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
