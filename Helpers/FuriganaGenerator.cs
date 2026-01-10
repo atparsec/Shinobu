@@ -1,6 +1,5 @@
 ﻿using Kawazu;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,22 +53,22 @@ namespace Shinobu.Helpers
                     if (kanjiLength == surface.Length)
                     {
                         // No okurigana → whole thing
-                        sb.Append($"<ruby>{surface}<rt>{hira}</rt></ruby>");
+                        sb.Append($"<ruby>{surface}<rt class=\"furigana\" aria-hidden=\"true\">{hira}</rt></ruby>");
                     }
                     else if (kanjiLength > 0)
                     {
-                        string kanjiPart = surface.Substring(0, kanjiLength);
-                        string okuriPart = surface.Substring(kanjiLength);
+                        string kanjiPart = surface[..kanjiLength];
+                        string okuriPart = surface[kanjiLength..];
 
                         // Approximation: reading for kanji part is total reading minus okurigana reading
-                        string kanjiReading = hira.Substring(0, hira.Length - okuriPart.Length);
+                        string kanjiReading = hira[..^okuriPart.Length];
 
-                        sb.Append($"<ruby>{kanjiPart}<rt>{kanjiReading}</rt></ruby>");
+                        sb.Append($"<ruby>{kanjiPart}<rt class=\"furigana\" aria-hidden=\"true\">{kanjiReading}</rt></ruby>");
                         sb.Append(okuriPart);
                     }
                     else
                     {
-                        sb.Append($"<ruby>{surface}<rt>{hira}</rt></ruby>");
+                        sb.Append($"<ruby>{surface}<rt class=\"furigana\" aria-hidden=\"true\">{hira}</rt></ruby>");
                     }
                 }
                 else

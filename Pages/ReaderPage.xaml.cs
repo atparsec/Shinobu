@@ -68,9 +68,18 @@ namespace Shinobu.Pages
             await sender.ExecuteScriptAsync(@"
         if (!window.__selectionListenerAttached) {
             document.addEventListener('mouseup', function () {
-                var selectedText = window.getSelection().toString();
-                if (selectedText.trim()) {
-                    window.chrome.webview.postMessage('selected:' + selectedText);
+                var selection = window.getSelection();
+
+                if (selection.rangeCount) {
+                    var range = selection.getRangeAt(0);
+                    var fragment = range.cloneContents();
+
+                    fragment.querySelectorAll('.furigana').forEach(el => el.remove());
+
+                    var selectedText = fragment.textContent;
+                    if (selectedText.trim()) {
+                        window.chrome.webview.postMessage('selected:' + selectedText);
+                    }
                 }
             });
             window.__selectionListenerAttached = true;
@@ -166,7 +175,7 @@ namespace Shinobu.Pages
     <head>
     <style>
     body {{ background-color: {backgroundColor}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px; }}
-    rt {{user-select: none;}}
+    rt {{user-select: none; pointer-events: none;}}
     </style>
     </head>
     <body>
