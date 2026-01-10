@@ -17,7 +17,7 @@
                 <StackPanel Margin="8,8,0,0" Spacing="12">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
                         <TextBlock Text="Library Folder" VerticalAlignment="Center" Width="160" />
-                        <TextBox x:Name="LibraryFolderTextBox" Width="420" PlaceholderText="Select library folder..." TextChanged="LibraryFolderTextBox_TextChanged"/>
+                        <TextBox x:Name="LibraryFolderTextBox" Width="360" PlaceholderText="Select library folder..." TextChanged="LibraryFolderTextBox_TextChanged"/>
                         <Button x:Name="BrowseButton" Content="Browse" Click="BrowseButton_Click"/>
                     </StackPanel>
 

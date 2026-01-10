@@ -84,5 +84,15 @@ namespace Shinobu
                 provider.OnTextChanged(sender, args);
             }
         }
+
+        public void SelectReaderNavigation()
+        {
+            var readerItem = navView.MenuItems.OfType<NavigationViewItem>()
+                .FirstOrDefault(item => item.Tag as string == "reader");
+            if (readerItem != null)
+            {
+                navView.SelectedItem = readerItem;
+            }
+        }
     }
 }

@@ -69,6 +69,32 @@ namespace Shinobu.Pages
                 _filePath = path;
                 await LoadBook();
             }
+            else
+            {
+                var (sessionFilePath, sessionPage) = ReaderSessionManager.GetSession();
+                if (sessionFilePath != null && File.Exists(sessionFilePath))
+                {
+                    _filePath = sessionFilePath;
+                    await LoadBook();
+                    _currentPage = Math.Min(sessionPage, _pages.Count - 1);
+                    OnPropertyChanged();
+                    await DisplayCurrentPage();
+                }
+            }
+
+            if (App.MainWindowInstance is MainWindow mainWindow)
+            {
+                mainWindow.SelectReaderNavigation();
+            }
+        }
+
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_filePath))
+            {
+                ReaderSessionManager.SaveSession(_filePath, _currentPage);
+            }
+            base.OnNavigatingFrom(e);
         }
 
         private async Task LoadBook()
