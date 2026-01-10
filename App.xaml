@@ -11,6 +11,7 @@
             </ResourceDictionary.MergedDictionaries>
             <local:BoolToStringConverter x:Key="BoolToStringConverter" TrueValue="★" FalseValue="☆" />
             <local:FileSizeConverter x:Key="FileSizeConverter" />
+            <FontFamily x:Key="JapaneseFont">Yu Gothic UI, Meiryo, Segoe UI, sans-serif</FontFamily>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -15,7 +15,8 @@ namespace Shinobu.Dialogs
             SelectedText = selectedText;
             InitializeComponent();
 
-            SelectedWordText.Text = selectedText;
+            string trimmed = selectedText.Length > 5 ? selectedText.Substring(0, 5) + "..." : selectedText;
+            SelectedWordText.Text = trimmed;
 
             ExplainTextBox.Text = "Explain: " + selectedText;
 
