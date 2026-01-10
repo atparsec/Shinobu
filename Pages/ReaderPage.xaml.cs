@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Media3D;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using Shinobu.Dialogs;
@@ -219,6 +220,9 @@ namespace Shinobu.Pages
             var backgroundColor = "#FFF";
             var shadowColor = "#EEEEEEFF";
             var textColor = "#000";
+
+            var accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+            var accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
             if (theme == "Dark" || (theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
             {
                 backgroundColor = "#000";
@@ -234,17 +238,22 @@ namespace Shinobu.Pages
             }
 
             var html = $@"
-    <html>
-    <head>
-    <style>
-    body {{ {bodyStyle} }}
-    rt {{user-select: none; pointer-events: none;}}
-    </style>
-    </head>
-    <body>
-    {furiganaText}
-    </body>
-    </html>";
+                <html>
+                <head>
+                    <style>
+                        body {{ {bodyStyle} }}
+                        rt {{user-select: none; pointer-events: none;}}
+                        ::selection {{ 
+                            background: {accentHex};
+                            box-shadow: inset 0 0 12px rgba(255, 190, 40, 0.35);
+                            text-shadow: 0 0 5px rgba(255, 220, 60, 0.6);
+                        }}
+                    </style>
+                </head>
+                <body>
+                    {furiganaText}
+                </body>
+                </html>";
             ReaderWebView.NavigateToString(html);
         }
 
