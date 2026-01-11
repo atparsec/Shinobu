@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
@@ -127,7 +128,8 @@ namespace Shinobu.Pages
         {
             if (sender is StackPanel sp && sp.DataContext is BookItem item)
             {
-                Frame.Navigate(typeof(ReaderPage), item.Path);
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", sp);
+                Frame.Navigate(typeof(ReaderPage), item.Path, new SuppressNavigationTransitionInfo());
             }
         }
     }

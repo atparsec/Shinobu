@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using Shinobu.Dialogs;
@@ -169,6 +170,14 @@ namespace Shinobu.Pages
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            base.OnNavigatedTo(e);
+            var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
+
+            if (anim != null)
+            {
+                anim.TryStart(ReaderWebView);
+            }
+
             await ReaderWebView.EnsureCoreWebView2Async();
             if (e.Parameter is string path)
             {
@@ -199,6 +208,7 @@ namespace Shinobu.Pages
             {
                 mainWindow.SelectReaderNavigation();
             }
+
         }
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
