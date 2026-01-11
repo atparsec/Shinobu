@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.UI;
 using Windows.UI.Popups;
 
 namespace Shinobu.Pages
@@ -130,12 +131,12 @@ namespace Shinobu.Pages
         public ReaderPage()
         {
             InitializeComponent();
-            _userJlptLevel = _settings.Values.TryGetValue("JlptLevel", out var levelObj) && levelObj is int levelInt ? (JlptLevel)levelInt : JlptLevel.N5;
-            _isVerticalText = _settings.Values.TryGetValue("IsVerticalText", out var vt) && vt is bool b && b;
-            _fontSize = _settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
-            _lineHeight = _settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
-            _readerFont = _settings.Values.TryGetValue("FontFamily", out var ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
-            _pageMargin = _settings.Values.TryGetValue("PageMargin", out var pm) && pm is double pmd ? pmd : 20.0;
+            _userJlptLevel = _settings.Values.TryGetValue("JlptLevel", out object? levelObj) && levelObj is int levelInt ? (JlptLevel)levelInt : JlptLevel.N5;
+            _isVerticalText = _settings.Values.TryGetValue("IsVerticalText", out object? vt) && vt is bool b && b;
+            _fontSize = _settings.Values.TryGetValue("FontSize", out object? fs) && fs is double fsd ? fsd : 16.0;
+            _lineHeight = _settings.Values.TryGetValue("LineHeight", out object? lh) && lh is double lhd ? lhd : 3.0;
+            _readerFont = _settings.Values.TryGetValue("FontFamily", out object? ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
+            _pageMargin = _settings.Values.TryGetValue("PageMargin", out object? pm) && pm is double pmd ? pmd : 20.0;
             _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "System";
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
@@ -176,7 +177,7 @@ namespace Shinobu.Pages
             }
             else
             {
-                var (sessionFilePath, sessionPage) = ReaderSessionManager.GetSession();
+                (string? sessionFilePath, int sessionPage) = ReaderSessionManager.GetSession();
                 if (sessionFilePath != null && File.Exists(sessionFilePath))
                 {
                     _filePath = sessionFilePath;
@@ -213,11 +214,11 @@ namespace Shinobu.Pages
 
         private async Task LoadBook()
         {
-            var content = await File.ReadAllTextAsync(_filePath);
+            string content = await File.ReadAllTextAsync(_filePath);
 
             // calculate chars per page
-            var fontSize = _settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
-            var lineHeight = _settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
+            double fontSize = _settings.Values.TryGetValue("FontSize", out object? fs) && fs is double fsd ? fsd : 16.0;
+            double lineHeight = _settings.Values.TryGetValue("LineHeight", out object? lh) && lh is double lhd ? lhd : 3.0;
 
             int linesPerPage = 20;
             int charsPerLine = 30;
@@ -226,7 +227,7 @@ namespace Shinobu.Pages
             _pages.Clear();
             for (int i = 0; i < content.Length; i += charsPerPage)
             {
-                var page = content.Substring(i, Math.Min(charsPerPage, content.Length - i));
+                string page = content.Substring(i, Math.Min(charsPerPage, content.Length - i));
                 _pages.Add(page);
             }
             _currentPage = 0;
@@ -238,35 +239,35 @@ namespace Shinobu.Pages
         {
             if (_pages.Count == 0) return;
 
-            var text = _pages[_currentPage];
-            var furiganaText = await GenerateFurigana(text);
+            string text = _pages[_currentPage];
+            string furiganaText = await GenerateFurigana(text);
 
             // set to webview
 
-            var fontSize = _fontSize;
-            var lineHeight = _lineHeight;
-            var fontFamily = _readerFont.Source;
-            var backgroundColor = "#FFF";
-            var shadowColor = "#EEEEEEFF";
-            var textColor = "#000";
+            double fontSize = _fontSize;
+            double lineHeight = _lineHeight;
+            string fontFamily = _readerFont.Source;
+            string backgroundColor = "#FFF";
+            string shadowColor = "#EEEEEEFF";
+            string textColor = "#000";
 
-            var accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
-            var accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
+            Color accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+            string accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
             if (_theme == "Dark" || (_theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
             {
                 backgroundColor = "#000";
                 shadowColor = "#151515FF";
                 textColor = "#fff";
             }
-            var gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
+            string gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: {fontFamily}; padding: {_pageMargin}px;";
+            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: {fontFamily}; padding: {_pageMargin}px;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
             }
 
-            var html = $@"
+            string html = $@"
                 <html>
                 <head>
                     <style>
@@ -330,10 +331,10 @@ namespace Shinobu.Pages
 
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
-            var message = args.TryGetWebMessageAsString();
+            string message = args.TryGetWebMessageAsString();
             if (message.StartsWith("selected:"))
             {
-                var selectedText = message.Substring("selected:".Length);
+                string selectedText = message["selected:".Length..];
                 await ShowSelectedTextPopup(selectedText);
             }
         }

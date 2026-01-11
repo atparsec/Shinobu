@@ -4,14 +4,10 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Shinobu.Helpers;
 using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Speech.Synthesis;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Media.Core;
 using Windows.Storage;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Shinobu.Dialogs
 {
@@ -25,12 +21,12 @@ namespace Shinobu.Dialogs
             SelectedText = selectedText;
             InitializeComponent();
 
-            string trimmed = selectedText.Length > 5 ? selectedText.Substring(0, 5) + "..." : selectedText;
+            string trimmed = selectedText.Length > 5 ? selectedText[..5] + "..." : selectedText;
             SelectedWordText.Text = trimmed;
 
             ExplainTextBox.Text = "Explain: " + selectedText;
 
-            var settings = ApplicationData.Current.LocalSettings;
+            ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
             var aiProvider = settings.Values.TryGetValue("AIProvider", out var p) && p is string s ? s : "";
             AINavViewItem.Content = aiProvider;
 
@@ -81,7 +77,7 @@ namespace Shinobu.Dialogs
         {
             if (App.Dictionary != null)
             {
-                var def = await App.Dictionary.GetDefinitionAsync(word);
+                Definition def = await App.Dictionary.GetDefinitionAsync(word);
                 ReadingText.Text = def.Reading;
                 // Tags
                 TagsPanel.Children.Clear();
@@ -100,11 +96,13 @@ namespace Shinobu.Dialogs
                         CornerRadius = new CornerRadius(4),
                         Padding = new Thickness(8, 4, 8, 4),
                         Margin = new Thickness(0, 0, 8, 8),
-                        Child = new TextBlock { 
-                            Text = tag, FontSize = 14, 
+                        Child = new TextBlock
+                        {
+                            Text = tag,
+                            FontSize = 14,
                             Foreground = new SolidColorBrush(DarkOrLightColor(color) ? Colors.White : Colors.Black)
                         }
-                        };
+                    };
                     TagsPanel.Children.Add(border);
                 }
                 // Meanings
