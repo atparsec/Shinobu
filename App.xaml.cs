@@ -53,7 +53,7 @@ namespace Shinobu
         {
             if (_window != null)
             {
-                string? theme = _localSettings.Values.TryGetValue("Theme", out object? t) ? t as string : "";
+                string? theme = _localSettings.Values.TryGetValue("Theme", out object? t) ? t as string : String.Empty;
                 ElementTheme requestedTheme = theme switch
                 {
                     "Light" => ElementTheme.Light,
@@ -70,17 +70,15 @@ namespace Shinobu
         public static async Task LoadDictionaryAsync()
         {
             var settings = ApplicationData.Current.LocalSettings;
-            string dictType = settings.Values.TryGetValue("Dictionary", out object? d) && d is string s ? s : "Local";
-            if (dictType == "Local")
+            string dictType = settings.Values.TryGetValue("Dictionary", out object? d) && d is string s ? s : String.Empty;
+            switch (dictType)
             {
-                await Task.Run(() => {
+                case "Local":
                     Dictionary = new LocalDictionary();
-                });
-            }
-            else
-            {
-                // skipping for now
-                Dictionary = null;
+                    break;
+                default:
+                    Dictionary = new OnlineDictionary();
+                    break;
             }
         }
 

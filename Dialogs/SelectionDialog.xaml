@@ -59,11 +59,14 @@
                                TextTrimming="CharacterEllipsis"
                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
 
-                                <TextBlock x:Name="ReadingText" Grid.Column="1"
-                                   FontSize="22"
-                                   FontWeight="Medium"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   FontFamily="{StaticResource JapaneseFont}"/>
+                                <TextBlock x:Name="ReadingText" 
+                                    Grid.Column="1"
+                                    FontSize="22"
+                                    FontWeight="Medium"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    FontFamily="{StaticResource JapaneseFont}"
+                                    TextWrapping="Wrap"
+                                    VerticalAlignment="Center"/>
 
                                 <StackPanel Grid.Column="2"
                                Orientation="Horizontal"
