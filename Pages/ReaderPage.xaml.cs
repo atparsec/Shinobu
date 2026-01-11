@@ -32,6 +32,7 @@ namespace Shinobu.Pages
         private FontFamily _readerFont;
         private double _pageMargin;
         private string _theme = "System";
+        private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
@@ -46,8 +47,7 @@ namespace Shinobu.Pages
                 if (_isVerticalText != value)
                 {
                     _isVerticalText = value;
-                    var settings = ApplicationData.Current.LocalSettings;
-                    settings.Values["IsVerticalText"] = value;
+                    _settings.Values["IsVerticalText"] = value;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(IsVerticalText));
                 }
@@ -62,8 +62,7 @@ namespace Shinobu.Pages
                 if (_fontSize != value)
                 {
                     _fontSize = value;
-                    var settings = ApplicationData.Current.LocalSettings;
-                    settings.Values["FontSize"] = value;
+                    _settings.Values["FontSize"] = value;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(ReaderFontSize));
                 }
@@ -78,8 +77,7 @@ namespace Shinobu.Pages
                 if (_lineHeight != value)
                 {
                     _lineHeight = value;
-                    var settings = ApplicationData.Current.LocalSettings;
-                    settings.Values["LineHeight"] = value;
+                    _settings.Values["LineHeight"] = value;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(LineHeight));
                 }
@@ -94,8 +92,7 @@ namespace Shinobu.Pages
                 if (_readerFont != value)
                 {
                     _readerFont = value;
-                    var settings = ApplicationData.Current.LocalSettings;
-                    settings.Values["FontFamily"] = value.Source;
+                    _settings.Values["FontFamily"] = value.Source;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(ReaderFont));
                 }
@@ -110,8 +107,7 @@ namespace Shinobu.Pages
                 if (_pageMargin != value)
                 {
                     _pageMargin = value;
-                    var settings = ApplicationData.Current.LocalSettings;
-                    settings.Values["PageMargin"] = value;
+                    _settings.Values["PageMargin"] = value;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
@@ -126,8 +122,7 @@ namespace Shinobu.Pages
                 if (_userJlptLevel != value)
                 {
                     _userJlptLevel = value;
-                    var settings = ApplicationData.Current.LocalSettings;
-                    settings.Values["JlptLevel"] = (int)value;
+                    _settings.Values["JlptLevel"] = (int)value;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(UserJlptLevel));
                 }
@@ -137,14 +132,13 @@ namespace Shinobu.Pages
         public ReaderPage()
         {
             InitializeComponent();
-            var settings = ApplicationData.Current.LocalSettings;
-            _userJlptLevel = settings.Values.TryGetValue("JlptLevel", out var levelObj) && levelObj is int levelInt ? (JlptLevel)levelInt : JlptLevel.N5;
-            _isVerticalText = settings.Values.TryGetValue("IsVerticalText", out var vt) && vt is bool b && b;
-            _fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
-            _lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
-            _readerFont = settings.Values.TryGetValue("FontFamily", out var ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
-            _pageMargin = settings.Values.TryGetValue("PageMargin", out var pm) && pm is double pmd ? pmd : 20.0;
-            _theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
+            _userJlptLevel = _settings.Values.TryGetValue("JlptLevel", out var levelObj) && levelObj is int levelInt ? (JlptLevel)levelInt : JlptLevel.N5;
+            _isVerticalText = _settings.Values.TryGetValue("IsVerticalText", out var vt) && vt is bool b && b;
+            _fontSize = _settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
+            _lineHeight = _settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
+            _readerFont = _settings.Values.TryGetValue("FontFamily", out var ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
+            _pageMargin = _settings.Values.TryGetValue("PageMargin", out var pm) && pm is double pmd ? pmd : 20.0;
+            _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "System";
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -224,9 +218,8 @@ namespace Shinobu.Pages
             var content = await File.ReadAllTextAsync(_filePath);
 
             // calculate chars per page
-            var settings = ApplicationData.Current.LocalSettings;
-            var fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
-            var lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
+            var fontSize = _settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
+            var lineHeight = _settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
 
             int linesPerPage = 20;
             int charsPerLine = 30;
@@ -354,7 +347,7 @@ namespace Shinobu.Pages
             var dialog = new SelectionDialog(text);
             var overlay = new Grid
             {
-                Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
+                Background = new SolidColorBrush(Microsoft.UI. Colors.Black) { Opacity = 0.5 },
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
