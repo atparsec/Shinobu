@@ -12,3 +12,4 @@ Todo:
 
 Dependencies:
  - Kawazu
+ - jmdict-eng-3.6.1.json -> download this and put it in solution folder
