@@ -1,13 +1,14 @@
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI;
 using Shinobu.Helpers;
 using System;
-using Windows.Storage;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Shinobu.Dialogs
 {
@@ -42,6 +43,37 @@ namespace Shinobu.Dialogs
             await LoadDictionaryDefinition(SelectedText);
         }
 
+        private static uint Djb2(string str)
+        {
+            var hash = 5381;
+            for (var i = 0; i < str.Length; i++)
+            {
+                hash = ((hash << 5) + hash) + str[i];
+            }
+            return (uint)hash;
+        }
+
+        private static string HashStringToColor(string str)
+        {
+            var hash = Djb2(str);
+            var r = (hash & 0xFF0000) >> 16;
+            var g = (hash & 0x00FF00) >> 8;
+            var b = hash & 0x0000FF;
+            string rHex = r.ToString("X2");
+            string gHex = g.ToString("X2");
+            string bHex = b.ToString("X2");
+            return "#" + rHex + gHex + bHex;
+        }
+
+        private static bool DarkOrLightColor(string hexColor)
+        {
+            var r = Convert.ToByte(hexColor.Substring(1, 2), 16);
+            var g = Convert.ToByte(hexColor.Substring(3, 2), 16);
+            var b = Convert.ToByte(hexColor.Substring(5, 2), 16);
+            var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 128;
+        }
+
         private async Task LoadDictionaryDefinition(string word)
         {
             if (App.Dictionary != null)
@@ -52,14 +84,24 @@ namespace Shinobu.Dialogs
                 TagsPanel.Children.Clear();
                 foreach (var tag in def.Tags)
                 {
+                    var color = HashStringToColor(tag);
                     var border = new Border
                     {
-                        Background = new SolidColorBrush(Microsoft.UI.Colors.Black),
+                        Background = new SolidColorBrush(new Windows.UI.Color
+                        {
+                            A = 255,
+                            R = (byte)Convert.ToByte(color.Substring(1, 2), 16),
+                            G = (byte)Convert.ToByte(color.Substring(3, 2), 16),
+                            B = (byte)Convert.ToByte(color.Substring(5, 2), 16)
+                        }),
                         CornerRadius = new CornerRadius(4),
                         Padding = new Thickness(8, 4, 8, 4),
-                        Margin = new Thickness(0, 0, 8, 0)
-                    };
-                    border.Child = new TextBlock { Text = tag, FontSize = 14 };
+                        Margin = new Thickness(0, 0, 8, 0),
+                        Child = new TextBlock { 
+                            Text = tag, FontSize = 14, 
+                            Foreground = new SolidColorBrush(DarkOrLightColor(color) ? Colors.White : Colors.Black)
+                        }
+                        };
                     TagsPanel.Children.Add(border);
                 }
                 // Meanings
