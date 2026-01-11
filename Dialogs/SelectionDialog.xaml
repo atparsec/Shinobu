@@ -8,6 +8,7 @@
     MaxWidth="600"
     MinWidth="600"
     MinHeight="500"
+    MaxHeight="600"
     >
 
     <Border Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" CornerRadius="8" BorderBrush="{ThemeResource ControlElevationBorderBrush}" BorderThickness="1" Padding="12">
@@ -74,6 +75,7 @@
                                 ToolTipService.ToolTip="Read aloud"
                                 MinWidth="44"
                                 MinHeight="44"
+                                            Click="SpeakButton_Click"
                                 Padding="0">
                                         <FontIcon Glyph="&#xE995;" FontSize="20"/>
                                     </Button>

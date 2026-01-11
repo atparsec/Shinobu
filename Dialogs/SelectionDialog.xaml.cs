@@ -4,9 +4,12 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Shinobu.Helpers;
 using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Speech.Synthesis;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Media.Core;
 using Windows.Storage;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -167,6 +170,28 @@ namespace Shinobu.Dialogs
 
             CloseAction?.Invoke();
 
+        }
+
+        private async void SpeakButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.SpeechSynth == null)
+            {
+                ContentDialog dialog = new()
+                {
+                    Title = "Japanese Voice Not Found",
+                    Content = "No Japanese voice is installed on your system. Please install a Japanese voice for text-to-speech functionality.",
+                    CloseButtonText = "OK",
+                    XamlRoot = App.MainWindowInstance!.Content.XamlRoot
+                };
+                await dialog.ShowAsync();
+                CloseAction?.Invoke();
+                return;
+            }
+            App.SpeechSynth.SetOutputToDefaultAudioDevice();
+            await Task.Run(() =>
+            {
+                App.SpeechSynth.Speak(SelectedText);
+            });
         }
     }
 }

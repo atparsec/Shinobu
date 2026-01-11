@@ -1,10 +1,13 @@
-﻿using System;
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
-using System.ComponentModel;
-using Windows.Storage;
 using Shinobu.Helpers;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Speech.Synthesis;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -20,7 +23,8 @@ namespace Shinobu
 
         public static Window? MainWindowInstance { get; private set; }
         public static IJapaneseDictionary? Dictionary { get; set; }
-        private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
+        public static SpeechSynthesizer? SpeechSynth { get; private set; } = new SpeechSynthesizer();
+        private static ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -42,13 +46,26 @@ namespace Shinobu
             _window.Activate();
             UpdateTheme();
             _ = LoadDictionaryAsync();
+
+
+            var jpVoice = SpeechSynth!.GetInstalledVoices().FirstOrDefault(v =>
+                v.VoiceInfo.Culture.Name.StartsWith("ja", StringComparison.OrdinalIgnoreCase)
+            );
+            if (jpVoice != null)
+            {
+                SpeechSynth.SelectVoice(jpVoice.VoiceInfo.Name);
+            } else
+            {
+                SpeechSynth = null;
+            }
+
         }
 
         private void UpdateTheme()
         {
             if (_window != null)
             {
-                var theme = _localSettings.Values.TryGetValue("Theme", out var t) ? t as string : "";
+                string? theme = _localSettings.Values.TryGetValue("Theme", out object? t) ? t as string : "";
                 ElementTheme requestedTheme = theme switch
                 {
                     "Light" => ElementTheme.Light,
@@ -65,7 +82,7 @@ namespace Shinobu
         public static async Task LoadDictionaryAsync()
         {
             var settings = ApplicationData.Current.LocalSettings;
-            var dictType = settings.Values.TryGetValue("Dictionary", out var d) && d is string s ? s : "Local";
+            string dictType = settings.Values.TryGetValue("Dictionary", out object? d) && d is string s ? s : "Local";
             if (dictType == "Local")
             {
                 Dictionary = new LocalDictionary();

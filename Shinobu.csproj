@@ -57,6 +57,7 @@
     <PackageReference Include="LibNMeCab" Version="0.10.1" />
     <PackageReference Include="JishoNet" Version="1.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Speech" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Page Update="Pages\SelectionDialog.xaml">
