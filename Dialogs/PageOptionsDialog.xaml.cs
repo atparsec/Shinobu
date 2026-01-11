@@ -53,9 +53,14 @@ namespace Shinobu.Dialogs
 
             FontFamilyComboBox.SelectedItem = _readerPage.ReaderFont?.Source ?? "Segoe UI";
 
-            PageMarginComboBox.SelectedIndex = 2; // TODO
+            PageMarginComboBox.SelectedIndex = _readerPage.ReaderMargin switch
+            {
+                10 => 0,
+                20 => 1,
+                30 => 2,
+                _ => 1
+            };
         }
-
 
         private void OrientationRadio_Checked(object sender, RoutedEventArgs e)
         {
@@ -80,7 +85,13 @@ namespace Shinobu.Dialogs
         private void PageMarginComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isLoaded) return;
-            // int index = PageMarginComboBox.SelectedIndex; TODO
+            _readerPage.ReaderMargin = PageMarginComboBox.SelectedIndex switch
+            {
+                0 => 10,
+                1 => 20,
+                2 => 30,
+                _ => 20
+            };
         }
 
         private void StyleButton_Click(object sender, RoutedEventArgs e)

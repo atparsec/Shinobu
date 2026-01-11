@@ -30,6 +30,8 @@ namespace Shinobu.Pages
         private double _fontSize;
         private double _lineHeight;
         private FontFamily _readerFont;
+        private double _pageMargin;
+        private string _theme = "System";
 
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
@@ -100,6 +102,22 @@ namespace Shinobu.Pages
             }
         }
 
+        public double ReaderMargin
+        {
+            get => _pageMargin;
+            set
+            {
+                if (_pageMargin != value)
+                {
+                    _pageMargin = value;
+                    var settings = ApplicationData.Current.LocalSettings;
+                    settings.Values["PageMargin"] = value;
+                    _ = DisplayCurrentPage();
+                    OnPropertyChanged(nameof(ReaderMargin));
+                }
+            }
+        }
+
         public JlptLevel UserJlptLevel
         {
             get => _userJlptLevel;
@@ -125,6 +143,8 @@ namespace Shinobu.Pages
             _fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
             _lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
             _readerFont = settings.Values.TryGetValue("FontFamily", out var ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
+            _pageMargin = settings.Values.TryGetValue("PageMargin", out var pm) && pm is double pmd ? pmd : 20.0;
+            _theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -231,18 +251,17 @@ namespace Shinobu.Pages
             var furiganaText = await GenerateFurigana(text);
 
             // set to webview
-            var settings = ApplicationData.Current.LocalSettings;
+            
             var fontSize = _fontSize;
             var lineHeight = _lineHeight;
             var fontFamily = _readerFont.Source;
-            var theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
             var backgroundColor = "#FFF";
             var shadowColor = "#EEEEEEFF";
             var textColor = "#000";
 
             var accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
             var accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
-            if (theme == "Dark" || (theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
+            if (_theme == "Dark" || (_theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
             {
                 backgroundColor = "#000";
                 shadowColor = "#151515FF";
@@ -250,7 +269,7 @@ namespace Shinobu.Pages
             }
             var gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: {fontFamily}; padding: 20px;";
+            var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: {fontFamily}; padding: {_pageMargin}px;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
