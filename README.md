@@ -7,7 +7,7 @@ Shinobu is a Japanese reader app for learners, which automatically annotates pla
 Supports granular customization of reading experience, such as horizontal vs vertical text, line spacing, font, etc. and automatically paginates text for a book-like experience.
 
 Todo:
- - Finish up the selection dialog and the page options dialog
+ - Finish up the selection dialog
  - Add epub and pdf reading functionality
 
 Dependencies:
