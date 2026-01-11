@@ -1,7 +1,6 @@
 ﻿using JishoNET.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Shinobu.Helpers
@@ -11,7 +10,7 @@ namespace Shinobu.Helpers
         private readonly JishoClient client;
         public OnlineDictionary()
         {
-            client = new JishoClient();
+            client = new();
         }
 
         public async Task<Definition> GetDefinitionAsync(string word)
@@ -19,10 +18,10 @@ namespace Shinobu.Helpers
             JishoResult<JishoDefinition[]> result = await client.GetDefinitionAsync(word);
             if (result.Data != null && result.Data.Length > 0)
             {
-                var allWords = new HashSet<string>();
-                var allReadings = new HashSet<string>();
-                var allDefinitions = new List<string>();
-                var allTags = new HashSet<string>();
+                HashSet<string> allWords = [];
+                HashSet<string> allReadings = [];
+                List<string> allDefinitions = [];
+                HashSet<string> allTags = [];
 
                 foreach (var jishoDef in result.Data)
                 {
@@ -41,7 +40,7 @@ namespace Shinobu.Helpers
                     }
                 }
 
-                var definition = new Definition(
+                Definition definition = new(
                     string.Join(", ", allWords),
                     string.Join(", ", allReadings),
                     string.Join("; ", allDefinitions),

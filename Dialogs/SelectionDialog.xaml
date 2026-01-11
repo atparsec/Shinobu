@@ -158,36 +158,7 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
 
-                                    <TextBlock Text="Examples" 
-                           Style="{StaticResource SubtitleTextBlockStyle}"
-                           Margin="0,0,0,16"
-                           x:Name="ExamplesHeader"
-                           Visibility="Collapsed"/>
-
-                                    <ItemsControl x:Name="ExamplesList">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Margin="0,0,0,20">
-                                                    <RichTextBlock FontSize="17" LineHeight="26">
-                                                        <Paragraph>
-                                                            <Run Text="{Binding Japanese}"
-                                             FontFamily="{StaticResource JapaneseFont}"/>
-                                                        </Paragraph>
-                                                    </RichTextBlock>
-
-                                                    <TextBlock Text="{Binding English}"
-                                           FontSize="16"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
                                 </StackPanel>
-                            </ScrollViewer>
-
-                        </StackPanel>
 
                     </Grid>
 
