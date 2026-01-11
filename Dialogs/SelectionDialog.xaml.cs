@@ -40,7 +40,7 @@ namespace Shinobu.Dialogs
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            await LoadDictionaryDefinition(SelectedText);
+            await ShowDictionaryPage();
         }
 
         private static uint Djb2(string str)
@@ -116,6 +116,15 @@ namespace Shinobu.Dialogs
             }
         }
 
+        private async Task ShowDictionaryPage()
+        {
+            DictionaryProgressRing.Visibility = Visibility.Visible;
+            DictionaryContent.Visibility = Visibility.Collapsed;
+            await LoadDictionaryDefinition(SelectedText);
+            DictionaryProgressRing.Visibility = Visibility.Collapsed;
+            DictionaryContent.Visibility = Visibility.Visible;
+        }
+
         private async void MainNavigationView_SelectionChanged(
             NavigationView sender,
             NavigationViewSelectionChangedEventArgs args)
@@ -132,7 +141,7 @@ namespace Shinobu.Dialogs
                 {
                     case "Dictionary":
                         DictionaryPage.Visibility = Visibility.Visible;
-                        await LoadDictionaryDefinition(SelectedText);
+                        await ShowDictionaryPage();
                         break;
 
                     case "Translate":

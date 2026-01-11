@@ -36,141 +36,147 @@
                 <Grid>
 
                     <!-- Dictionary page -->
-                    <StackPanel x:Name="DictionaryPage" Margin="24,20,24,40" MaxWidth="720">
+                    <Grid x:Name="DictionaryPage" Margin="24,20,24,40" MaxWidth="720">
 
-                        <Grid ColumnSpacing="16" Margin="0,0,0,20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                           x:Name="SelectedWordText"
-                           FontSize="52"
-                           FontWeight="SemiBold"
-                           FontFamily="{StaticResource JapaneseFont}"
-                           VerticalAlignment="Center"
-                           TextWrapping="Wrap"
-                           TextTrimming="CharacterEllipsis"
-                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                        <ProgressRing x:Name="DictionaryProgressRing" IsActive="True" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-                            <TextBlock x:Name="ReadingText" Grid.Column="1"
-                               FontSize="22"
-                               FontWeight="Medium"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               FontFamily="{StaticResource JapaneseFont}"/>
+                        <StackPanel x:Name="DictionaryContent" Visibility="Visible">
 
-                            <StackPanel Grid.Column="2"
-                           Orientation="Horizontal"
-                           VerticalAlignment="Center"
-                           Spacing="12">
+                            <Grid ColumnSpacing="16" Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                               x:Name="SelectedWordText"
+                               FontSize="52"
+                               FontWeight="SemiBold"
+                               FontFamily="{StaticResource JapaneseFont}"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
 
-                                <Button x:Name="SpeakButton"
-                            Style="{StaticResource AccentButtonStyle}"
-                            ToolTipService.ToolTip="Read aloud"
-                            MinWidth="44"
-                            MinHeight="44"
-                            Padding="0">
-                                    <FontIcon Glyph="&#xE995;" FontSize="20"/>
-                                </Button>
-                                
-                                <Button x:Name="CopyButton"
-                                        Style="{StaticResource SubtleButtonStyle}"
-                                        ToolTipService.ToolTip="Copy Selected"
-                                        MinWidth="44"
-                                        MinHeight="44"
-                                        Padding="0"
-                                        Click="CopyButton_Click">
-                                    <FontIcon x:Name="CopyIcon"
-                                                Glyph="&#xE8C8;" FontSize="20"/>
-                                </Button>
+                                <TextBlock x:Name="ReadingText" Grid.Column="1"
+                                   FontSize="22"
+                                   FontWeight="Medium"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   FontFamily="{StaticResource JapaneseFont}"/>
 
-                                <Button x:Name="BookmarkButton"
-                            Style="{StaticResource SubtleButtonStyle}"
-                            ToolTipService.ToolTip="Save Selected"
-                            MinWidth="44"
-                            MinHeight="44"
-                            Padding="0">
-                                    <FontIcon x:Name="BookmarkIcon"
-                                  Glyph="&#xE734;" FontSize="22"/>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-                        
-                        <controls:WrapPanel
-                            Margin="0,0,0,20"
-                            x:Name="TagsPanel"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            Padding="5,5,10,5"
-                            />
+                                <StackPanel Grid.Column="2"
+                               Orientation="Horizontal"
+                               VerticalAlignment="Center"
+                               Spacing="12">
 
-                        <TextBlock Text="Meaning" 
-                       Style="{StaticResource SubtitleTextBlockStyle}"
-                       Margin="0,0,0,12"/>
+                                    <Button x:Name="SpeakButton"
+                                Style="{StaticResource AccentButtonStyle}"
+                                ToolTipService.ToolTip="Read aloud"
+                                MinWidth="44"
+                                MinHeight="44"
+                                Padding="0">
+                                        <FontIcon Glyph="&#xE995;" FontSize="20"/>
+                                    </Button>
+                                    
+                                    <Button x:Name="CopyButton"
+                                            Style="{StaticResource SubtleButtonStyle}"
+                                            ToolTipService.ToolTip="Copy Selected"
+                                            MinWidth="44"
+                                            MinHeight="44"
+                                            Padding="0"
+                                            Click="CopyButton_Click">
+                                        <FontIcon x:Name="CopyIcon"
+                                                    Glyph="&#xE8C8;" FontSize="20"/>
+                                    </Button>
 
-                        <ItemsControl x:Name="DefinitionsList" 
-                          Margin="0,0,0,32">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,16" ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
+                                    <Button x:Name="BookmarkButton"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                ToolTipService.ToolTip="Save Selected"
+                                MinWidth="44"
+                                MinHeight="44"
+                                Padding="0">
+                                        <FontIcon x:Name="BookmarkIcon"
+                                      Glyph="&#xE734;" FontSize="22"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <controls:WrapPanel
+                                Margin="0,0,0,20"
+                                x:Name="TagsPanel"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Padding="5,5,10,5"
+                                />
 
-                                        <TextBlock Text="{Binding Number}"
-                                       FontWeight="SemiBold"
-                                       FontSize="18"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       VerticalAlignment="Top"
-                                       Margin="0,2,0,0"/>
+                            <TextBlock Text="Meaning" 
+                           Style="{StaticResource SubtitleTextBlockStyle}"
+                           Margin="0,0,0,12"/>
 
-                                        <RichTextBlock Grid.Column="1" FontSize="18" LineHeight="28">
-                                            <RichTextBlock.Blocks>
+                            <ItemsControl x:Name="DefinitionsList" 
+                              Margin="0,0,0,32">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,16" ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding Number}"
+                                           FontWeight="SemiBold"
+                                           FontSize="18"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           VerticalAlignment="Top"
+                                           Margin="0,2,0,0"/>
+
+                                            <RichTextBlock Grid.Column="1" FontSize="18" LineHeight="28">
+                                                <RichTextBlock.Blocks>
+                                                    <Paragraph>
+                                                        <Run Text="{Binding Text}"
+                                                     Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                                                        <Run Text="{Binding ExtraInfo}"
+                                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                     FontSize="15"/>
+                                                    </Paragraph>
+                                                </RichTextBlock.Blocks>
+                                            </RichTextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="Examples" 
+                           Style="{StaticResource SubtitleTextBlockStyle}"
+                           Margin="0,0,0,16"
+                           x:Name="ExamplesHeader"
+                           Visibility="Collapsed"/>
+
+                            <ItemsControl x:Name="ExamplesList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,20">
+                                            <RichTextBlock FontSize="17" LineHeight="26">
                                                 <Paragraph>
-                                                    <Run Text="{Binding Text}"
-                                             Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                                                    <Run Text="{Binding ExtraInfo}"
-                                             Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                             FontSize="15"/>
+                                                    <Run Text="{Binding Japanese}"
+                                             FontFamily="{StaticResource JapaneseFont}"/>
                                                 </Paragraph>
-                                            </RichTextBlock.Blocks>
-                                        </RichTextBlock>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                            </RichTextBlock>
 
-                        <TextBlock Text="Examples" 
-                       Style="{StaticResource SubtitleTextBlockStyle}"
-                       Margin="0,0,0,16"
-                       x:Name="ExamplesHeader"
-                       Visibility="Collapsed"/>
+                                            <TextBlock Text="{Binding English}"
+                                           FontSize="16"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                        <ItemsControl x:Name="ExamplesList">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,20">
-                                        <RichTextBlock FontSize="17" LineHeight="26">
-                                            <Paragraph>
-                                                <Run Text="{Binding Japanese}"
-                                         FontFamily="{StaticResource JapaneseFont}"/>
-                                            </Paragraph>
-                                        </RichTextBlock>
+                        </StackPanel>
 
-                                        <TextBlock Text="{Binding English}"
-                                       FontSize="16"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                    </StackPanel>
+                    </Grid>
 
                     <!-- Translate page -->
                     <WebView2
