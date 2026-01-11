@@ -29,11 +29,12 @@ namespace Shinobu.Pages
         private bool _isVerticalText;
         private double _fontSize;
         private double _lineHeight;
+        private FontFamily _readerFont;
 
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
         public string PageText => $"{_currentPage + 1} / {_pages.Count}";
-        public List<JlptLevel> JlptLevels { get; } = Enum.GetValues<JlptLevel>().ToList();
+        public List<JlptLevel> JlptLevels { get; } = [.. Enum.GetValues<JlptLevel>()];
 
         public bool IsVerticalText
         {
@@ -51,7 +52,7 @@ namespace Shinobu.Pages
             }
         }
 
-        public double FontSize
+        public double ReaderFontSize
         {
             get => _fontSize;
             set
@@ -62,7 +63,7 @@ namespace Shinobu.Pages
                     var settings = ApplicationData.Current.LocalSettings;
                     settings.Values["FontSize"] = value;
                     _ = DisplayCurrentPage();
-                    OnPropertyChanged(nameof(FontSize));
+                    OnPropertyChanged(nameof(ReaderFontSize));
                 }
             }
         }
@@ -79,6 +80,22 @@ namespace Shinobu.Pages
                     settings.Values["LineHeight"] = value;
                     _ = DisplayCurrentPage();
                     OnPropertyChanged(nameof(LineHeight));
+                }
+            }
+        }
+
+        public FontFamily ReaderFont
+        {
+            get => _readerFont;
+            set
+            {
+                if (_readerFont != value)
+                {
+                    _readerFont = value;
+                    var settings = ApplicationData.Current.LocalSettings;
+                    settings.Values["FontFamily"] = value.Source;
+                    _ = DisplayCurrentPage();
+                    OnPropertyChanged(nameof(ReaderFont));
                 }
             }
         }
@@ -107,6 +124,7 @@ namespace Shinobu.Pages
             _isVerticalText = settings.Values.TryGetValue("IsVerticalText", out var vt) && vt is bool b && b;
             _fontSize = settings.Values.TryGetValue("FontSize", out var fs) && fs is double fsd ? fsd : 16.0;
             _lineHeight = settings.Values.TryGetValue("LineHeight", out var lh) && lh is double lhd ? lhd : 3.0;
+            _readerFont = settings.Values.TryGetValue("FontFamily", out var ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -216,6 +234,7 @@ namespace Shinobu.Pages
             var settings = ApplicationData.Current.LocalSettings;
             var fontSize = _fontSize;
             var lineHeight = _lineHeight;
+            var fontFamily = _readerFont.Source;
             var theme = settings.Values.TryGetValue("Theme", out var t) ? t as string : "System";
             var backgroundColor = "#FFF";
             var shadowColor = "#EEEEEEFF";
@@ -231,7 +250,7 @@ namespace Shinobu.Pages
             }
             var gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: Arial, sans-serif; padding: 20px;";
+            var bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: {fontFamily}; padding: 20px;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";

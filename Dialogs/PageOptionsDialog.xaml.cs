@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using System;
 
 namespace Shinobu.Dialogs
@@ -25,7 +26,7 @@ namespace Shinobu.Dialogs
 
         private void InitControls()
         {
-            var fonts = new[] { "Segoe UI", "Meiryo", "Yu Gothic", "Noto Sans JP", "Roboto", "Arial" };
+            var fonts = new[] { "Segoe UI", "Meiryo", "Yu Gothic" };
             foreach (var font in fonts)
                 FontFamilyComboBox.Items.Add(font);
 
@@ -37,7 +38,7 @@ namespace Shinobu.Dialogs
             foreach (var spacing in lineSpacings)
                 LineSpacingComboBox.Items.Add($"{spacing:F2}×");
 
-            var margins = new[] { "None", "Small", "Medium", "Large", "Very Large" };
+            var margins = new[] { "Small", "Medium", "Large" };
             foreach (var m in margins)
                 PageMarginComboBox.Items.Add(m);
         }
@@ -47,13 +48,12 @@ namespace Shinobu.Dialogs
             HorizontalRadio.IsChecked = !_readerPage.IsVerticalText;
             VerticalRadio.IsChecked = _readerPage.IsVerticalText;
 
-            FontSizeComboBox.SelectedItem = (int)Math.Round(_readerPage.FontSize);
+            FontSizeComboBox.SelectedItem = (int)Math.Round(_readerPage.ReaderFontSize);
             LineSpacingComboBox.SelectedItem = $"{_readerPage.LineHeight:F2}×";
 
-            // FontFamilyComboBox.SelectedItem = _readerPage.FontFamily?.Source ?? "Segoe UI";
+            FontFamilyComboBox.SelectedItem = _readerPage.ReaderFont?.Source ?? "Segoe UI";
 
-            // TODO
-            PageMarginComboBox.SelectedIndex = 2;
+            PageMarginComboBox.SelectedIndex = 2; // TODO
         }
 
 
@@ -66,7 +66,7 @@ namespace Shinobu.Dialogs
         private void FontSizeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isLoaded || FontSizeComboBox.SelectedItem is not int size) return;
-            _readerPage.FontSize = size;
+            _readerPage.ReaderFontSize = size;
         }
 
         private void LineSpacingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -80,7 +80,7 @@ namespace Shinobu.Dialogs
         private void PageMarginComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isLoaded) return;
-            // int index = PageMarginComboBox.SelectedIndex;
+            // int index = PageMarginComboBox.SelectedIndex; TODO
         }
 
         private void StyleButton_Click(object sender, RoutedEventArgs e)
@@ -91,7 +91,8 @@ namespace Shinobu.Dialogs
 
         private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // TODO
+            if (!_isLoaded || FontFamilyComboBox.SelectedItem is not string font) return;
+            _readerPage.ReaderFont = new FontFamily(font);
         }
     }
 }

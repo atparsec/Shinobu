@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Shinobu.Dialogs.PageOptionsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -46,8 +46,12 @@
                                    VerticalAlignment="Center" 
                                    FontWeight="Medium"
                                    MinWidth="100"/>
-                        <Button x:Name="BoldButton"    Content="B" FontWeight="Bold"   Width="48" Click="StyleButton_Click" Tag="Bold"/>
-                        <Button x:Name="ItalicButton"  Content="I" FontStyle="Italic" Width="48" Click="StyleButton_Click" Tag="Italic"/>
+                        <Button x:Name="BoldButton" FontWeight="Bold"   Width="48" Click="StyleButton_Click" Tag="Bold">
+                            <FontIcon Glyph="" />
+                        </Button>
+                        <Button x:Name="ItalicButton" FontStyle="Italic" Width="48" Click="StyleButton_Click" Tag="Italic">
+                            <FontIcon Glyph="" />
+                        </Button>
                     </StackPanel>
                 </StackPanel>
 
@@ -65,7 +69,7 @@
                                      GroupName="PageOrientation"
                                      Checked="OrientationRadio_Checked"
                                      Style="{StaticResource RadioButtonWithPreview}">
-                            <StackPanel Orientation="Vertical" Spacing="8">
+                            <StackPanel Orientation="Vertical" Spacing="8" Margin="10,0,0,0">
                                 <Border Background="#222" CornerRadius="6" Padding="12" Width="140" Height="90">
                                     <StackPanel Orientation="Vertical" Spacing="6">
                                         <Rectangle Fill="Gray" Width="130" Height="10"/>
@@ -85,9 +89,11 @@
                                      GroupName="PageOrientation"
                                      Checked="OrientationRadio_Checked"
                                      Style="{StaticResource RadioButtonWithPreview}">
-                            <StackPanel Orientation="Vertical" Spacing="8">
+                            <StackPanel Orientation="Vertical" Spacing="8" Margin="10,0,0,0">
                                 <Border Background="#222" CornerRadius="6" Padding="12" Width="140" Height="90">
                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
+                                        <Rectangle Fill="Gray" Width="10" Height="80"/>
                                         <Rectangle Fill="Gray" Width="10" Height="80"/>
                                         <Rectangle Fill="Gray" Width="10" Height="80"/>
                                         <Rectangle Fill="Gray" Width="10" Height="80"/>
