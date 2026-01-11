@@ -96,7 +96,7 @@ namespace Shinobu.Dialogs
                         }),
                         CornerRadius = new CornerRadius(4),
                         Padding = new Thickness(8, 4, 8, 4),
-                        Margin = new Thickness(0, 0, 8, 0),
+                        Margin = new Thickness(0, 0, 8, 8),
                         Child = new TextBlock { 
                             Text = tag, FontSize = 14, 
                             Foreground = new SolidColorBrush(DarkOrLightColor(color) ? Colors.White : Colors.Black)
