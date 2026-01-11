@@ -1,24 +1,11 @@
 using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using Shinobu.Helpers;
 using Shinobu.Pages;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Graphics;
-using Windows.UI.ApplicationSettings;
-using Windows.UI.WindowManagement;
 
 namespace Shinobu
 {
@@ -30,7 +17,7 @@ namespace Shinobu
             IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             Microsoft.UI.Windowing.AppWindow appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-            appWindow.Resize(new SizeInt32(1200,1600));
+            appWindow.Resize(new SizeInt32(1200, 1600));
 
             this.ExtendsContentIntoTitleBar = true;
             this.SetTitleBar(titleBar);

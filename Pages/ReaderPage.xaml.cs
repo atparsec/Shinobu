@@ -1,7 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Media3D;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using Shinobu.Dialogs;
@@ -10,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Popups;
@@ -244,7 +242,7 @@ namespace Shinobu.Pages
             var furiganaText = await GenerateFurigana(text);
 
             // set to webview
-            
+
             var fontSize = _fontSize;
             var lineHeight = _lineHeight;
             var fontFamily = _readerFont.Source;
@@ -347,7 +345,7 @@ namespace Shinobu.Pages
             var dialog = new SelectionDialog(text);
             var overlay = new Grid
             {
-                Background = new SolidColorBrush(Microsoft.UI. Colors.Black) { Opacity = 0.5 },
+                Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
