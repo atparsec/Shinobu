@@ -57,6 +57,10 @@ namespace Shinobu.Pages
                     "Dark" => 1,
                     _ => 2
                 };
+            } 
+            else
+            {
+                ThemeComboBox.SelectedIndex = 2;
             }
 
             // AI Features
