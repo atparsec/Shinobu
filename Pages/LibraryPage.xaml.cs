@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
+using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -126,12 +127,14 @@ namespace Shinobu.Pages
 
         private void BookCard_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (sender is StackPanel sp && sp.DataContext is BookItem item)
+            if (sender is FrameworkElement fe && fe.DataContext is BookItem item)
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", sp);
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", fe);
                 Frame.Navigate(typeof(ReaderPage), item.Path, new SuppressNavigationTransitionInfo());
             }
         }
+
+
     }
 
     internal class BookItem
@@ -142,5 +145,21 @@ namespace Shinobu.Pages
         public string Path { get; set; } = string.Empty;
         public bool IsFavorite { get; set; }
         public string PreviewText { get; set; } = string.Empty;
+
+        public string FileNameStripped
+        {
+            get
+            {
+                return System.IO.Path.GetFileNameWithoutExtension(FileName);
+            }
+        }
+
+        public string BookColor
+        {
+            get
+            {
+                return "#22" + UIColorHelper.HashStringToColor(FileName)[1..];
+            }
+        }
     }
 }

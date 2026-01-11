@@ -9,6 +9,99 @@
     mc:Ignorable="d"
     Loaded="Page_Loaded">
 
+    <Page.Resources>
+        <DataTemplate x:Key="BookCardTemplate">
+            <Grid
+                Width="150"
+                Height="220"
+                CornerRadius="12"
+                PointerEntered="Card_PointerEntered"
+                PointerExited="Card_PointerExited"
+                Tapped="BookCard_Tapped"
+                >
+                <Border
+                    CornerRadius="12"
+                    BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    >
+
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#EEEEEE" Offset="0"/>
+                            <GradientStop Color="{Binding BookColor}" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+
+                    <Grid Padding="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Spacing="6" Padding="12">
+                            <TextBlock
+                                Text="{Binding FileNameStripped}"
+                                FontSize="22"
+                                FontWeight="SemiBold"
+                                TextWrapping="WrapWholeWords"
+                                MaxLines="3"
+                                Foreground="#121212"
+                                />
+
+                            <TextBlock
+                                Text="{Binding PreviewText}"
+                                FontSize="12"
+                                Opacity="0.8"
+                                MaxLines="4"
+                                TextWrapping="Wrap"
+                                Foreground="#121212"
+                                />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Row="1"
+                            Spacing="2"
+                            Opacity="0.75"
+                            Padding="12">
+
+                            <TextBlock
+                                Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
+                                FontSize="11"
+                                />
+
+                            <TextBlock
+                                Text="{Binding DateModified}"
+                                FontSize="11"
+                                />
+                        </StackPanel>
+
+                        <Button 
+                            x:Name="FavoriteButton" 
+                            Visibility="Collapsed" 
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Right"
+                            Height="35"
+                            Width="35"
+                            Padding="0,0,0,0"
+                            Margin="0,-10,-10,0"
+                            Background="#66000000"
+                            CornerRadius="17"
+                            Click="FavoriteButton_Click"
+                         >
+                            <TextBlock Text="{Binding IsFavorite, Converter={StaticResource BoolToStringConverter}}" FontSize="14" Foreground="Gold"/>
+                        </Button>
+
+                    </Grid>
+                </Border>
+                <Border
+                    Width="12"
+                    HorizontalAlignment="Left"
+                    Background="#33000000"
+                    CornerRadius="12,0,0,12"/>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
     <Grid Padding="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,65 +112,16 @@
 
         <TextBlock Text="Library" FontSize="32" FontWeight="Bold" />
 
-        <StackPanel x:Name="FavoritesSection" Grid.Row="1" Visibility="Collapsed" Margin="0,20,0,0">
-            <TextBlock Text="Favorites" FontSize="24" FontWeight="SemiBold" />
+        <StackPanel x:Name="FavoritesSection" Grid.Row="1" Visibility="Collapsed" Margin="0,20,0,30">
+            <TextBlock Text="Favorites" FontSize="24" FontWeight="SemiBold" Padding="0,0,0,20"/>
             <GridView x:Name="FavoritesGrid" SelectionMode="Single" Padding="0">
                 <GridView.ItemTemplate>
-                    <DataTemplate>
-                        <!-- Card for each book/file -->
-                        <StackPanel
-                        Width="150"
-                        Height="200"
-                        Padding="10"
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                            Shadow="{ThemeResource CommandBarFlyoutOverflowShadow}"
-                        Spacing="10"
-                        PointerEntered="Card_PointerEntered"
-                        PointerExited="Card_PointerExited"
-                        Tapped="BookCard_Tapped">
-
-                            <TextBlock
-                            Text="{Binding FileName}"
-                            TextWrapping="WrapWholeWords"
-                            Style="{ThemeResource BodyStrongTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
-
-                            <TextBlock
-                            Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
-                            Style="{ThemeResource CaptionTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                            <TextBlock
-                            Text="{Binding DateModified}"
-                            Style="{ThemeResource CaptionTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                            <TextBlock
-                            Text="{Binding PreviewText}"
-                            Style="{ThemeResource CaptionTextBlockStyle}"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            TextWrapping="Wrap"
-                            MaxLines="3" />
-
-                            <Button x:Name="FavoriteButton" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Click="FavoriteButton_Click">
-                                <TextBlock Text="{Binding IsFavorite, Converter={StaticResource BoolToStringConverter}}" FontSize="20" />
-                            </Button>
-                        </StackPanel>
-                    </DataTemplate>
+                    <StaticResource ResourceKey="BookCardTemplate"/>
                 </GridView.ItemTemplate>
-
-                <GridView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VariableSizedWrapGrid Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </GridView.ItemsPanel>
             </GridView>
         </StackPanel>
 
-        <TextBlock Grid.Row="2" Text="All Books" FontSize="24" FontWeight="SemiBold" Margin="0,20,0,0" />
+        <TextBlock Grid.Row="2" Text="All Books" FontSize="24" FontWeight="SemiBold" Padding="0,0,0,20" />
 
         <GridView
         x:Name="BooksGrid"
@@ -85,43 +129,7 @@
         SelectionMode="Single"
         Padding="0">
             <GridView.ItemTemplate>
-                <DataTemplate>
-                    <!-- Card for each book/file -->
-                    <StackPanel
-                    Width="150"
-                    Height="200"
-                    Padding="10"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    CornerRadius="8"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                        Shadow="{ThemeResource CommandBarFlyoutOverflowShadow}"
-                    Spacing="10"
-                    PointerEntered="Card_PointerEntered"
-                    PointerExited="Card_PointerExited"
-                    Tapped="BookCard_Tapped">
-
-                        <TextBlock
-                        Text="{Binding FileName}"
-                        TextWrapping="WrapWholeWords"
-                        Style="{ThemeResource BodyStrongTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
-
-                        <TextBlock
-                        Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
-                        Style="{ThemeResource CaptionTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                        <TextBlock
-                        Text="{Binding DateModified}"
-                        Style="{ThemeResource CaptionTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                        <Button x:Name="FavoriteButton" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Click="FavoriteButton_Click">
-                            <TextBlock Text="{Binding IsFavorite, Converter={StaticResource BoolToStringConverter}}" FontSize="20" />
-                        </Button>
-                    </StackPanel>
-                </DataTemplate>
+                <StaticResource ResourceKey="BookCardTemplate"/>
             </GridView.ItemTemplate>
 
             <GridView.ItemsPanel>
