@@ -46,19 +46,7 @@ namespace Shinobu
             _window.Activate();
             UpdateTheme();
             _ = LoadDictionaryAsync();
-
-
-            var jpVoice = SpeechSynth!.GetInstalledVoices().FirstOrDefault(v =>
-                v.VoiceInfo.Culture.Name.StartsWith("ja", StringComparison.OrdinalIgnoreCase)
-            );
-            if (jpVoice != null)
-            {
-                SpeechSynth.SelectVoice(jpVoice.VoiceInfo.Name);
-            } else
-            {
-                SpeechSynth = null;
-            }
-
+            _ = LoadSpeechSynthAsync();
         }
 
         private void UpdateTheme()
@@ -85,12 +73,30 @@ namespace Shinobu
             string dictType = settings.Values.TryGetValue("Dictionary", out object? d) && d is string s ? s : "Local";
             if (dictType == "Local")
             {
-                Dictionary = new LocalDictionary();
+                await Task.Run(() => {
+                    Dictionary = new LocalDictionary();
+                });
             }
             else
             {
-                // Defaulting to local for now
-                Dictionary = new LocalDictionary();
+                // skipping for now
+                Dictionary = null;
+            }
+        }
+
+        public static async Task LoadSpeechSynthAsync()
+        {
+            SpeechSynth = new SpeechSynthesizer();
+            var jpVoice = SpeechSynth.GetInstalledVoices().FirstOrDefault(v =>
+                v.VoiceInfo.Culture.Name.StartsWith("ja", StringComparison.OrdinalIgnoreCase)
+            );
+            if (jpVoice != null)
+            {
+                SpeechSynth.SelectVoice(jpVoice.VoiceInfo.Name);
+            }
+            else
+            {
+                SpeechSynth = null;
             }
         }
     }

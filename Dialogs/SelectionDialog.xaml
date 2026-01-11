@@ -116,65 +116,73 @@
                            Style="{StaticResource SubtitleTextBlockStyle}"
                            Margin="0,0,0,12"/>
 
-                            <ItemsControl x:Name="DefinitionsList" 
-                              Margin="0,0,0,32">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,0,0,16" ColumnSpacing="12">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                        VerticalScrollBarVisibility="Auto"
+                                          Height="150"
+                                        Margin="0,0,0,20">
+                                <StackPanel>
+                                    <ItemsControl x:Name="DefinitionsList" 
+                              Margin="0,0,0,32"
+                                          >
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,16" ColumnSpacing="12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
 
-                                            <TextBlock Text="{Binding Number}"
+                                                    <TextBlock Text="{Binding Number}"
                                            FontWeight="SemiBold"
                                            FontSize="18"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            VerticalAlignment="Top"
                                            Margin="0,2,0,0"/>
 
-                                            <RichTextBlock Grid.Column="1" FontSize="18" LineHeight="28">
-                                                <RichTextBlock.Blocks>
-                                                    <Paragraph>
-                                                        <Run Text="{Binding Text}"
+                                                    <RichTextBlock Grid.Column="1" FontSize="18" LineHeight="28">
+                                                        <RichTextBlock.Blocks>
+                                                            <Paragraph>
+                                                                <Run Text="{Binding Text}"
                                                      Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                                                        <Run Text="{Binding ExtraInfo}"
+                                                                <Run Text="{Binding ExtraInfo}"
                                                      Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                                      FontSize="15"/>
-                                                    </Paragraph>
-                                                </RichTextBlock.Blocks>
-                                            </RichTextBlock>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                                            </Paragraph>
+                                                        </RichTextBlock.Blocks>
+                                                    </RichTextBlock>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
 
-                            <TextBlock Text="Examples" 
+                                    <TextBlock Text="Examples" 
                            Style="{StaticResource SubtitleTextBlockStyle}"
                            Margin="0,0,0,16"
                            x:Name="ExamplesHeader"
                            Visibility="Collapsed"/>
 
-                            <ItemsControl x:Name="ExamplesList">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Margin="0,0,0,20">
-                                            <RichTextBlock FontSize="17" LineHeight="26">
-                                                <Paragraph>
-                                                    <Run Text="{Binding Japanese}"
+                                    <ItemsControl x:Name="ExamplesList">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,0,0,20">
+                                                    <RichTextBlock FontSize="17" LineHeight="26">
+                                                        <Paragraph>
+                                                            <Run Text="{Binding Japanese}"
                                              FontFamily="{StaticResource JapaneseFont}"/>
-                                                </Paragraph>
-                                            </RichTextBlock>
+                                                        </Paragraph>
+                                                    </RichTextBlock>
 
-                                            <TextBlock Text="{Binding English}"
+                                                    <TextBlock Text="{Binding English}"
                                            FontSize="16"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            TextWrapping="Wrap"
                                            Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
 
                         </StackPanel>
 
