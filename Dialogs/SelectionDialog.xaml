@@ -90,7 +90,8 @@
                                         ToolTipService.ToolTip="Copy Selected"
                                         MinWidth="44"
                                         MinHeight="44"
-                                        Padding="0">
+                                        Padding="0"
+                                        Click="CopyButton_Click">
                                     <FontIcon x:Name="CopyIcon"
                                                 Glyph="&#xE8C8;" FontSize="20"/>
                                 </Button>

@@ -10,6 +10,9 @@
 *.userosscache
 *.sln.docstates
 
+# The large dictionary (jmdict.json)
+jmdict-eng-3.6.1.json
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

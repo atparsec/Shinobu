@@ -3,6 +3,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using System.ComponentModel;
 using Windows.Storage;
+using Shinobu.Helpers;
+using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -17,6 +19,7 @@ namespace Shinobu
         private Window? _window;
 
         public static Window? MainWindowInstance { get; private set; }
+        public static IJapaneseDictionary? Dictionary { get; set; }
         private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
@@ -38,6 +41,7 @@ namespace Shinobu
             MainWindowInstance = _window;
             _window.Activate();
             UpdateTheme();
+            _ = LoadDictionaryAsync();
         }
 
         private void UpdateTheme()
@@ -55,6 +59,21 @@ namespace Shinobu
                 {
                     fe.RequestedTheme = requestedTheme;
                 }
+            }
+        }
+
+        public static async Task LoadDictionaryAsync()
+        {
+            var settings = ApplicationData.Current.LocalSettings;
+            var dictType = settings.Values.TryGetValue("Dictionary", out var d) && d is string s ? s : "Local";
+            if (dictType == "Local")
+            {
+                Dictionary = new LocalDictionary();
+            }
+            else
+            {
+                // Defaulting to local for now
+                Dictionary = new LocalDictionary();
             }
         }
     }

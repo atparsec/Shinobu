@@ -252,6 +252,7 @@ namespace Shinobu.Pages
         private void DictionaryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SaveSettings();
+            _ = Shinobu.App.LoadDictionaryAsync();
         }
 
         private void LibraryFolderTextBox_TextChanged(object sender, TextChangedEventArgs e)
