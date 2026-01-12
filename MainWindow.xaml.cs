@@ -42,7 +42,7 @@ namespace Shinobu
                     case "reader":
                         navFrame.Navigate(typeof(ReaderPage));
                         break;
-                    case "words":
+                    case "bookmarks":
                         //navFrame.Navigate(typeof(WordsPage));
                         break;
                 }

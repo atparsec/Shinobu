@@ -61,9 +61,18 @@
                     Icon="TwoPage"
                     Tag="reader" />
                 <NavigationViewItem
-                    Content="Saved Words"
+                    Content="Bookmarks"
                     Icon="Tag"
-                    Tag="words" />
+                    Tag="bookmarks">
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge
+                            x:Name="bookmarkBadge"
+                            Background="Gray"
+                            Foreground="White"
+                            Visibility="Collapsed"
+                            />
+                    </NavigationViewItem.InfoBadge>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame x:Name="navFrame" />
         </NavigationView>
