@@ -1,22 +1,15 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Navigation;
 using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
 
 namespace Shinobu.Pages
@@ -38,13 +31,13 @@ namespace Shinobu.Pages
 
         private async Task LoadBooksAsync()
         {
-            var libraryPath = GetLibraryPath();
+            string libraryPath = GetLibraryPath();
             if (!Directory.Exists(libraryPath)) return;
 
-            var files = await Task.Run(() => Directory.GetFiles(libraryPath, "*.txt", SearchOption.TopDirectoryOnly));
+            string[] files = await Task.Run(() => Directory.GetFiles(libraryPath, "*.txt", SearchOption.TopDirectoryOnly));
             var favorites = LoadFavorites();
 
-            foreach (var file in files)
+            foreach (string? file in files)
             {
                 var info = new FileInfo(file);
                 var item = new BookItem
@@ -73,21 +66,21 @@ namespace Shinobu.Pages
         private string GetLibraryPath()
         {
             var settings = ApplicationData.Current.LocalSettings;
-            var path = settings.Values.TryGetValue("LibraryFolder", out var v) ? v as string : null;
+            string? path = settings.Values.TryGetValue("LibraryFolder", out object? v) ? v as string : null;
             return string.IsNullOrEmpty(path) ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads") : path;
         }
 
         private List<string> LoadFavorites()
         {
             var settings = ApplicationData.Current.LocalSettings;
-            var json = settings.Values.TryGetValue("Favorites", out var v) ? v as string : "[]";
+            string? json = settings.Values.TryGetValue("Favorites", out object? v) ? v as string : "[]";
             return JsonSerializer.Deserialize<List<string>>(json!) ?? [];
         }
 
         private void SaveFavorites()
         {
             var favs = AllBooks.Where(b => b.IsFavorite).Select(b => b.Path).ToList();
-            var json = JsonSerializer.Serialize(favs);
+            string json = JsonSerializer.Serialize(favs);
             ApplicationData.Current.LocalSettings.Values["Favorites"] = json;
         }
 

@@ -48,7 +48,7 @@ namespace Shinobu.Pages
                 {
                     _isVerticalText = value;
                     _settings.Values["IsVerticalText"] = value;
-                    _ = DisplayCurrentPage();
+                    _ = LoadBook();
                     OnPropertyChanged(nameof(IsVerticalText));
                 }
             }
@@ -63,7 +63,7 @@ namespace Shinobu.Pages
                 {
                     _fontSize = value;
                     _settings.Values["FontSize"] = value;
-                    _ = DisplayCurrentPage();
+                    _ = LoadBook();
                     OnPropertyChanged(nameof(ReaderFontSize));
                 }
             }
@@ -78,7 +78,7 @@ namespace Shinobu.Pages
                 {
                     _lineHeight = value;
                     _settings.Values["LineHeight"] = value;
-                    _ = DisplayCurrentPage();
+                    _ = LoadBook();
                     OnPropertyChanged(nameof(LineHeight));
                 }
             }
@@ -93,7 +93,7 @@ namespace Shinobu.Pages
                 {
                     _readerFont = value;
                     _settings.Values["FontFamily"] = value.Source;
-                    _ = DisplayCurrentPage();
+                    _ = LoadBook();
                     OnPropertyChanged(nameof(ReaderFont));
                 }
             }
@@ -108,7 +108,7 @@ namespace Shinobu.Pages
                 {
                     _pageMargin = value;
                     _settings.Values["PageMargin"] = value;
-                    _ = DisplayCurrentPage();
+                    _ = LoadBook();
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
             }
@@ -181,8 +181,18 @@ namespace Shinobu.Pages
             await ReaderWebView.EnsureCoreWebView2Async();
             if (e.Parameter is string path)
             {
-                _filePath = path;
+                _filePath = path.Split(';')[0];
                 await LoadBook();
+                if (path.Contains(';'))
+                {
+                    string[] parts = path.Split(';');
+                    if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
+                    {
+                        _currentPage = Math.Min(pageNum-1, _pages.Count - 1);
+                        OnPropertyChanged();
+                        await DisplayCurrentPage();
+                    }
+                }
             }
             else
             {
@@ -193,7 +203,7 @@ namespace Shinobu.Pages
                     if (!File.Exists(_filePath))
                     {
                         ReaderSessionManager.ClearSession();
-                        MessageDialog info = new("The file from your last reading session could not be found.", "File Not Found");
+                        MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
                         await info.ShowAsync();
                         return;
                     }
@@ -226,18 +236,24 @@ namespace Shinobu.Pages
         {
             string content = await File.ReadAllTextAsync(_filePath);
 
-            // calculate chars per page
-            double fontSize = _settings.Values.TryGetValue("FontSize", out object? fs) && fs is double fsd ? fsd : 16.0;
-            double lineHeight = _settings.Values.TryGetValue("LineHeight", out object? lh) && lh is double lhd ? lhd : 3.0;
+            double fontSize = ReaderFontSize;
+            double lineHeight = LineHeight;
+            double pageMargin = ReaderMargin;
+            double webViewWidth = ReaderWebView.ActualWidth - 2 * pageMargin;
+            double webViewHeight = ReaderWebView.ActualHeight - 2 * pageMargin;
 
-            int linesPerPage = 20;
-            int charsPerLine = 30;
-            int charsPerPage = linesPerPage * charsPerLine;
+            double avgCharWidth = fontSize * 0.76;
+            double avgLineHeight = fontSize * lineHeight + fontSize;
+
+            int charsPerLineApprox = (int)(webViewWidth / avgCharWidth);
+            int linesPerPageApprox = (int)(webViewHeight / avgLineHeight * 0.85) - (IsVerticalText ? 1 : 0);
+
+            int targetCharsPerPage = (int)(charsPerLineApprox * linesPerPageApprox );
 
             _pages.Clear();
-            for (int i = 0; i < content.Length; i += charsPerPage)
+            for (int i = 0; i < content.Length; i += targetCharsPerPage)
             {
-                string page = content.Substring(i, Math.Min(charsPerPage, content.Length - i));
+                string page = content.Substring(i, Math.Min(targetCharsPerPage, content.Length - i));
                 _pages.Add(page);
             }
             _currentPage = 0;
@@ -271,7 +287,7 @@ namespace Shinobu.Pages
             }
             string gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight}; font-family: {fontFamily}; padding: {_pageMargin}px;";
+            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight*fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
@@ -353,7 +369,7 @@ namespace Shinobu.Pages
         {
             if (_isDialogShowing) return;
             _isDialogShowing = true;
-            var dialog = new SelectionDialog(text);
+            var dialog = new SelectionDialog(text, _currentPage, _filePath);
             var overlay = new Grid
             {
                 Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },

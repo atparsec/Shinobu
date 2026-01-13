@@ -40,7 +40,7 @@
 
                         <StackPanel Spacing="6" Padding="12">
                             <TextBlock
-                                Text="{Binding FileNameStripped}"
+                                Text="{Binding FileName, Converter={StaticResource FilenameFromPathConverter}}"
                                 FontSize="22"
                                 FontWeight="SemiBold"
                                 TextWrapping="WrapWholeWords"
