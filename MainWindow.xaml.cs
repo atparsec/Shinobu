@@ -43,7 +43,7 @@ namespace Shinobu
                         navFrame.Navigate(typeof(ReaderPage));
                         break;
                     case "bookmarks":
-                        //navFrame.Navigate(typeof(WordsPage));
+                        navFrame.Navigate(typeof(BookmarksPage));
                         break;
                 }
             }

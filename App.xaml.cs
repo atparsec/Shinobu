@@ -24,6 +24,7 @@ namespace Shinobu
         public static Window? MainWindowInstance { get; private set; }
         public static IJapaneseDictionary? Dictionary { get; set; }
         public static SpeechSynthesizer? SpeechSynth { get; private set; } = new SpeechSynthesizer();
+        public static BookmarksManager? BookmarksManager { get; private set; }
         private static ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
@@ -47,6 +48,8 @@ namespace Shinobu
             UpdateTheme();
             _ = LoadDictionaryAsync();
             _ = LoadSpeechSynthAsync();
+            BookmarksManager = new BookmarksManager();
+            _ = BookmarksManager.LoadAsync();
         }
 
         private void UpdateTheme()
@@ -112,6 +115,22 @@ namespace Shinobu
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class FilenameFromPathConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is string path)
+            {
+                return System.IO.Path.GetFileName(path);
+            }
+            return value;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return value;
         }
     }
 

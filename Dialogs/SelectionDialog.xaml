@@ -95,11 +95,12 @@
                                     </Button>
 
                                     <Button x:Name="BookmarkButton"
-                                Style="{StaticResource SubtleButtonStyle}"
-                                ToolTipService.ToolTip="Save Selected"
-                                MinWidth="44"
-                                MinHeight="44"
-                                Padding="0">
+                                        Style="{StaticResource SubtleButtonStyle}"
+                                        ToolTipService.ToolTip="Bookmark Selected"
+                                        MinWidth="44"
+                                        MinHeight="44"
+                                        Padding="0"
+                                        Click="BookmarkButton_Click">
                                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE74E;" />
                                     </Button>
                                 </StackPanel>

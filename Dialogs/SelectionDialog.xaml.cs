@@ -15,10 +15,14 @@ namespace Shinobu.Dialogs
     {
         public string SelectedText { get; set; }
         public Action? CloseAction { get; set; }
+        public int pageNumber { get; set; }
+        public string filePath { get; set; }
 
-        public SelectionDialog(string selectedText)
+        public SelectionDialog(string selectedText, int pageNumber, string filePath)
         {
             SelectedText = selectedText;
+            this.pageNumber = pageNumber;
+            this.filePath = filePath;
             InitializeComponent();
 
             string trimmed = selectedText.Length > 5 ? selectedText[..5] + "..." : selectedText;
@@ -159,6 +163,27 @@ namespace Shinobu.Dialogs
             {
                 App.SpeechSynth.Speak(SelectedText);
             });
+        }
+
+        private void BookmarkButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.BookmarksManager != null)
+            {
+                var bookmark = new Bookmark
+                {
+                    Text = SelectedText,
+                    Definition = new Definition
+                    (
+                        SelectedText,
+                        ReadingText.Text,
+                        string.Join("; ", DefinitionsList.Items.Cast<dynamic>().Select(m => m.Text)),
+                        TagsPanel.Children.Cast<Border>().Select(b => ((TextBlock)b.Child).Text).ToList()
+                    ),
+                    PageNumber = pageNumber+1,
+                    FilePath = filePath
+                };
+                _ = App.BookmarksManager.AddBookmarkAsync(bookmark);
+            }
         }
     }
 }
