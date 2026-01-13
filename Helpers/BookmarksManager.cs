@@ -54,5 +54,16 @@ namespace Shinobu.Helpers
             await SaveAsync();
             return;
         }
+
+        public async Task UpdateBookmarkNoteAsync(Bookmark bookmark, string note)
+        {
+            int index = Bookmarks.IndexOf(bookmark);
+            if (index >= 0)
+            {
+                Bookmarks[index].Note = note;
+                await SaveAsync();
+            }
+            return;
+        }
     }
 }

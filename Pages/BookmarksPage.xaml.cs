@@ -1,16 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Shinobu.Helpers;
 using System;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace Shinobu.Pages;
-
-/// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
-/// </summary>
 public sealed partial class BookmarksPage : Page
 {
     public BookmarksPage()
@@ -44,4 +38,53 @@ public sealed partial class BookmarksPage : Page
             }
         }
     }
+
+    private void NoteView_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        var noteView = (FrameworkElement)sender;
+        var container = noteView.Parent as FrameworkElement;
+        if (container == null) return;
+
+        var noteEditor = container.FindName("NoteEditor") as TextBox;
+        if (noteEditor == null) return;
+
+        noteView.Visibility = Visibility.Collapsed;
+        noteEditor.Visibility = Visibility.Visible;
+        noteEditor.Focus(FocusState.Programmatic);
+    }
+
+    private void NoteEditor_LostFocus(object sender, RoutedEventArgs e)
+    {
+        ExitEditMode(sender);
+    }
+
+    private void NoteEditor_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter &&
+            !((TextBox)sender).AcceptsReturn)
+        {
+            ExitEditMode(sender);
+        }
+    }
+
+    private void ExitEditMode(object sender)
+    {
+        var noteEditor = (FrameworkElement)sender;
+        var container = noteEditor.Parent as FrameworkElement;
+        if (container == null) return;
+
+        var noteView = container.FindName("NoteView") as FrameworkElement;
+        if (noteView == null) return;
+
+        noteEditor.Visibility = Visibility.Collapsed;
+        noteView.Visibility = Visibility.Visible;
+
+        App.BookmarksManager?.UpdateBookmarkNoteAsync(
+            (noteEditor.Tag as Bookmark)!,
+            (noteEditor as TextBox)!.Text);
+
+        (noteView as TextBlock)!.Text = (noteEditor as TextBox)!.Text;
+    }
+
+
 }

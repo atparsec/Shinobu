@@ -124,7 +124,7 @@ namespace Shinobu
         {
             if (value is string path)
             {
-                return System.IO.Path.GetFileName(path);
+                return System.IO.Path.GetFileNameWithoutExtension(path);
             }
             return value;
         }

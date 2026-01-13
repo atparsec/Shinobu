@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Shinobu.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d">
 
     <Grid Padding="20">
@@ -84,20 +84,60 @@
                         <Expander.Content>
                             <StackPanel Spacing="12">
                                 <TextBlock
-                                        Text="Definition"
+                                        Text="Bookmarked Text"
                                         FontSize="14"
                                         FontWeight="SemiBold"/>
 
                                 <TextBlock
-                                        Text="{x:Bind Definition.Word}"
+                                        Text="{x:Bind Text}"
                                         FontSize="16"
                                         FontWeight="Medium"/>
 
-                                <TextBlock
-                                        Text="{x:Bind Definition.Meaning}"
+                                <StackPanel Spacing="6">
+
+                                    <TextBlock
+                                        Text="Bookmarked Text"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"/>
+
+                                    <TextBlock
+                                        Text="{x:Bind Text}"
+                                        FontSize="16"
+                                        FontWeight="Medium"/>
+
+                                    <Grid x:Name="NoteView"
+                                          Tapped="NoteView_Tapped"
+                                          >
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon
+                                            Glyph="&#xE70F;"
+                                            FontFamily="Segoe MDL2 Assets"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Margin="0,2,6,0"/>
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Text="{x:Bind Note}"
+                                            FontSize="14"
+                                            TextWrapping="Wrap"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </Grid>
+                                    
+                                    <TextBox
+                                        x:Name="NoteEditor"
+                                        Text="{x:Bind Note, Mode=TwoWay}"
                                         FontSize="14"
                                         TextWrapping="Wrap"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        AcceptsReturn="True"
+                                        Visibility="Collapsed"
+                                        LostFocus="NoteEditor_LostFocus"
+                                        KeyDown="NoteEditor_KeyDown"/>
+                                </StackPanel>
+
                             </StackPanel>
                         </Expander.Content>
 
