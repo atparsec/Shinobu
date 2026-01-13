@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Shinobu"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d"
     Loaded="Page_Loaded">
 
@@ -110,7 +110,18 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Library" FontSize="32" FontWeight="Bold" />
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Library" FontSize="32" FontWeight="Bold" Grid.Column="0"/>
+            <Button x:Name="RefreshButton" Click="RefreshButton_Click" Grid.Column="2" HorizontalAlignment="Right" Width="40" Height="40" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="Refresh Library">
+                <FontIcon Glyph="&#xE72C;" />
+            </Button>
+        </Grid>
 
         <StackPanel x:Name="FavoritesSection" Grid.Row="1" Visibility="Collapsed" Margin="0,20,0,30">
             <TextBlock Text="Favorites" FontSize="24" FontWeight="SemiBold" Padding="0,0,0,20"/>

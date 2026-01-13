@@ -16,8 +16,8 @@ namespace Shinobu.Pages
 {
     public sealed partial class LibraryPage : Page
     {
-        private ObservableCollection<BookItem> AllBooks { get; } = new();
-        private ObservableCollection<BookItem> FavoriteBooks { get; } = new();
+        private ObservableCollection<BookItem> AllBooks { get; } = [];
+        private ObservableCollection<BookItem> FavoriteBooks { get; } = [];
 
         public LibraryPage()
         {
@@ -32,15 +32,18 @@ namespace Shinobu.Pages
         private async Task LoadBooksAsync()
         {
             string libraryPath = GetLibraryPath();
-            if (!Directory.Exists(libraryPath)) return;
+            if (!Directory.Exists(libraryPath))
+            {
+                return;
+            }
 
             string[] files = await Task.Run(() => Directory.GetFiles(libraryPath, "*.txt", SearchOption.TopDirectoryOnly));
-            var favorites = LoadFavorites();
+            List<string> favorites = LoadFavorites();
 
             foreach (string? file in files)
             {
-                var info = new FileInfo(file);
-                var item = new BookItem
+                FileInfo info = new(file);
+                BookItem item = new()
                 {
                     FileName = Path.GetFileName(file),
                     FileSize = info.Length,
@@ -50,7 +53,9 @@ namespace Shinobu.Pages
                 };
                 AllBooks.Add(item);
                 if (item.IsFavorite)
+                {
                     FavoriteBooks.Add(item);
+                }
             }
 
             BooksGrid.ItemsSource = AllBooks;
@@ -65,21 +70,21 @@ namespace Shinobu.Pages
 
         private string GetLibraryPath()
         {
-            var settings = ApplicationData.Current.LocalSettings;
+            ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
             string? path = settings.Values.TryGetValue("LibraryFolder", out object? v) ? v as string : null;
             return string.IsNullOrEmpty(path) ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads") : path;
         }
 
         private List<string> LoadFavorites()
         {
-            var settings = ApplicationData.Current.LocalSettings;
+            ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
             string? json = settings.Values.TryGetValue("Favorites", out object? v) ? v as string : "[]";
             return JsonSerializer.Deserialize<List<string>>(json!) ?? [];
         }
 
         private void SaveFavorites()
         {
-            var favs = AllBooks.Where(b => b.IsFavorite).Select(b => b.Path).ToList();
+            List<string> favs = AllBooks.Where(b => b.IsFavorite).Select(b => b.Path).ToList();
             string json = JsonSerializer.Serialize(favs);
             ApplicationData.Current.LocalSettings.Values["Favorites"] = json;
         }
@@ -111,7 +116,7 @@ namespace Shinobu.Pages
                 }
                 else
                 {
-                    FavoriteBooks.Remove(item);
+                    _ = FavoriteBooks.Remove(item);
                 }
                 UpdateFavoritesVisibility();
                 SaveFavorites();
@@ -122,11 +127,17 @@ namespace Shinobu.Pages
         {
             if (sender is FrameworkElement fe && fe.DataContext is BookItem item)
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", fe);
-                Frame.Navigate(typeof(ReaderPage), item.Path, new SuppressNavigationTransitionInfo());
+                _ = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", fe);
+                _ = Frame.Navigate(typeof(ReaderPage), item.Path, new SuppressNavigationTransitionInfo());
             }
         }
 
+        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            AllBooks.Clear();
+            FavoriteBooks.Clear();
+            _ = LoadBooksAsync();
+        }
 
     }
 
@@ -139,20 +150,8 @@ namespace Shinobu.Pages
         public bool IsFavorite { get; set; }
         public string PreviewText { get; set; } = string.Empty;
 
-        public string FileNameStripped
-        {
-            get
-            {
-                return System.IO.Path.GetFileNameWithoutExtension(FileName);
-            }
-        }
+        public string FileNameStripped => System.IO.Path.GetFileNameWithoutExtension(FileName);
 
-        public string BookColor
-        {
-            get
-            {
-                return "#22" + UIColorHelper.HashStringToColor(FileName)[1..];
-            }
-        }
+        public string BookColor => "#22" + UIColorHelper.HashStringToColor(FileName)[1..];
     }
 }

@@ -1,16 +1,21 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
 using Shinobu.Helpers;
 using Shinobu.Pages;
 using System;
 using System.Linq;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
+using Windows.Storage;
 
 namespace Shinobu
 {
     public sealed partial class MainWindow : Window
     {
+        private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -81,6 +86,41 @@ namespace Shinobu
             {
                 navView.SelectedItem = readerItem;
             }
+        }
+
+        private async void Grid_Drop(object sender, DragEventArgs e)
+        {
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                var items = await e.DataView.GetStorageItemsAsync();
+                if (items.Count > 0)
+                {
+                    var storageFile = items[0] as StorageFile;
+                    if (storageFile != null)
+                    {
+                        if (storageFile.FileType.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string? libraryFolder = _settings.Values.TryGetValue("LibraryFolder", out object? v) ? v as string : null;
+                            if (string.IsNullOrEmpty(libraryFolder))
+                            {
+                                libraryFolder = ApplicationData.Current.LocalFolder.Path;
+                            }
+                            var libStorage = await StorageFolder.GetFolderFromPathAsync(libraryFolder);
+                            var newFile = await storageFile.CopyAsync(libStorage, storageFile.Name, NameCollisionOption.ReplaceExisting);
+                            if (navFrame.Content is LibraryPage libraryPage)
+                            {
+                                navFrame.Navigate(typeof(ReaderPage), newFile.Path);
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        private void Grid_DragOver(object sender, DragEventArgs e)
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
         }
     }
 }
