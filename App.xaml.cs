@@ -4,6 +4,7 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Speech.Synthesis;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace Shinobu
         public static Window? MainWindowInstance { get; private set; }
         public static IJapaneseDictionary? Dictionary { get; set; }
         public static SpeechSynthesizer? SpeechSynth { get; private set; } = new SpeechSynthesizer();
-        public static BookmarksManager? BookmarksManager { get; private set; }
+        public static BookmarksManager? BookmarksManager { get; private set; } = new BookmarksManager();
         private static ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
@@ -48,7 +49,6 @@ namespace Shinobu
             UpdateTheme();
             _ = LoadDictionaryAsync();
             _ = LoadSpeechSynthAsync();
-            BookmarksManager = new BookmarksManager();
             _ = BookmarksManager.LoadAsync();
         }
 
@@ -94,6 +94,7 @@ namespace Shinobu
             if (jpVoice != null)
             {
                 SpeechSynth.SelectVoice(jpVoice.VoiceInfo.Name);
+                SpeechSynth.Rate = -2;
             }
             else
             {
