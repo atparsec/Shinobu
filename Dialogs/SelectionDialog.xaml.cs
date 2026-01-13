@@ -31,10 +31,10 @@ namespace Shinobu.Dialogs
             ExplainTextBox.Text = "Explain: " + selectedText;
 
             ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
-            var aiProvider = settings.Values.TryGetValue("AIProvider", out var p) && p is string s ? s : "";
+            string aiProvider = settings.Values.TryGetValue("AIProvider", out object? p) && p is string s ? s : "";
             AINavViewItem.Content = aiProvider;
 
-            var aiEnabled = settings.Values.TryGetValue("AIEnabled", out var enabled) && enabled is bool b && b;
+            bool aiEnabled = settings.Values.TryGetValue("AIEnabled", out object? enabled) && enabled is bool b && b;
             AINavViewItem.Visibility = aiEnabled ? Visibility.Visible : Visibility.Collapsed;
 
             MainNavigationView.SelectedItem = MainNavigationView.MenuItems[0];
@@ -54,17 +54,17 @@ namespace Shinobu.Dialogs
                 ReadingText.Text = def.Reading;
                 // Tags
                 TagsPanel.Children.Clear();
-                foreach (var tag in def.Tags)
+                foreach (string tag in def.Tags)
                 {
-                    var color = UIColorHelper.HashStringToColor(tag);
+                    string color = UIColorHelper.HashStringToColor(tag);
                     var border = new Border
                     {
                         Background = new SolidColorBrush(new Windows.UI.Color
                         {
                             A = 255,
-                            R = (byte)Convert.ToByte(color.Substring(1, 2), 16),
-                            G = (byte)Convert.ToByte(color.Substring(3, 2), 16),
-                            B = (byte)Convert.ToByte(color.Substring(5, 2), 16)
+                            R = Convert.ToByte(color.Substring(1, 2), 16),
+                            G = Convert.ToByte(color.Substring(3, 2), 16),
+                            B = Convert.ToByte(color.Substring(5, 2), 16)
                         }),
                         CornerRadius = new CornerRadius(4),
                         Padding = new Thickness(8, 4, 8, 4),
@@ -132,7 +132,10 @@ namespace Shinobu.Dialogs
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
             string text = SelectedText;
-            if (string.IsNullOrEmpty(text)) return;
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
 
             var data = new DataPackage();
             data.SetText(text);
@@ -154,7 +157,7 @@ namespace Shinobu.Dialogs
                     CloseButtonText = "OK",
                     XamlRoot = App.MainWindowInstance!.Content.XamlRoot
                 };
-                await dialog.ShowAsync();
+                _ = await dialog.ShowAsync();
                 CloseAction?.Invoke();
                 return;
             }
@@ -172,14 +175,9 @@ namespace Shinobu.Dialogs
                 var bookmark = new Bookmark
                 {
                     Text = SelectedText,
-                    Definition = new Definition
-                    (
-                        SelectedText,
-                        ReadingText.Text,
-                        string.Join("; ", DefinitionsList.Items.Cast<dynamic>().Select(m => m.Text)),
-                        TagsPanel.Children.Cast<Border>().Select(b => ((TextBlock)b.Child).Text).ToList()
-                    ),
-                    PageNumber = pageNumber+1,
+                    Note = string.Join("; ", DefinitionsList.Items.Cast<dynamic>().Select(m => m.Text)),
+                    Tags = [.. TagsPanel.Children.Cast<Border>().Select(b => ((TextBlock)b.Child).Text)],
+                    PageNumber = pageNumber + 1,
                     FilePath = filePath
                 };
                 _ = App.BookmarksManager.AddBookmarkAsync(bookmark);

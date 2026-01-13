@@ -50,34 +50,34 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
-                               x:Name="SelectedWordText"
-                               FontSize="52"
-                               FontWeight="SemiBold"
-                               FontFamily="{StaticResource JapaneseFont}"
-                               VerticalAlignment="Center"
-                               TextWrapping="Wrap"
-                               TextTrimming="CharacterEllipsis"
-                               Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-
-                                <TextBlock x:Name="ReadingText" 
-                                    Grid.Column="1"
-                                    FontSize="22"
-                                    FontWeight="Medium"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    x:Name="SelectedWordText"
+                                    FontSize="52"
+                                    FontWeight="SemiBold"
                                     FontFamily="{StaticResource JapaneseFont}"
+                                    VerticalAlignment="Center"
                                     TextWrapping="Wrap"
-                                    VerticalAlignment="Center"/>
+                                    TextTrimming="CharacterEllipsis"
+                                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+
+                                <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto" Grid.Column="1">
+                                    <TextBlock x:Name="ReadingText" 
+                                        FontSize="22"
+                                        FontWeight="Medium"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        FontFamily="{StaticResource JapaneseFont}"
+                                        VerticalAlignment="Center"/>
+                                </ScrollViewer>
 
                                 <StackPanel Grid.Column="2"
-                               Orientation="Horizontal"
-                               VerticalAlignment="Center"
-                               Spacing="12">
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Spacing="12">
 
                                     <Button x:Name="SpeakButton"
-                                Style="{StaticResource AccentButtonStyle}"
-                                ToolTipService.ToolTip="Read aloud"
-                                MinWidth="44"
-                                MinHeight="44"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        ToolTipService.ToolTip="Read aloud"
+                                        MinWidth="44"
+                                        MinHeight="44"
                                             Click="SpeakButton_Click"
                                 Padding="0">
                                         <FontIcon Glyph="&#xE995;" FontSize="20"/>
