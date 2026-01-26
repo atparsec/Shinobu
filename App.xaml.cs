@@ -2,9 +2,7 @@
 using Microsoft.UI.Xaml.Data;
 using Shinobu.Helpers;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Speech.Synthesis;
 using System.Threading.Tasks;
@@ -26,7 +24,7 @@ namespace Shinobu
         public static IJapaneseDictionary? Dictionary { get; set; }
         public static SpeechSynthesizer? SpeechSynth { get; private set; } = new SpeechSynthesizer();
         public static BookmarksManager? BookmarksManager { get; private set; } = new BookmarksManager();
-        private static ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
+        private static readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -56,7 +54,7 @@ namespace Shinobu
         {
             if (_window != null)
             {
-                string? theme = _localSettings.Values.TryGetValue("Theme", out object? t) ? t as string : String.Empty;
+                string? theme = _localSettings.Values.TryGetValue("Theme", out object? t) ? t as string : string.Empty;
                 ElementTheme requestedTheme = theme switch
                 {
                     "Light" => ElementTheme.Light,
@@ -72,23 +70,19 @@ namespace Shinobu
 
         public static async Task LoadDictionaryAsync()
         {
-            var settings = ApplicationData.Current.LocalSettings;
-            string dictType = settings.Values.TryGetValue("Dictionary", out object? d) && d is string s ? s : String.Empty;
-            switch (dictType)
+            ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
+            string dictType = settings.Values.TryGetValue("Dictionary", out object? d) && d is string s ? s : string.Empty;
+            Dictionary = dictType switch
             {
-                case "Local":
-                    Dictionary = new LocalDictionary();
-                    break;
-                default:
-                    Dictionary = new OnlineDictionary();
-                    break;
-            }
+                "Local" => new LocalDictionary(),
+                _ => new OnlineDictionary(),
+            };
         }
 
         public static async Task LoadSpeechSynthAsync()
         {
             SpeechSynth = new SpeechSynthesizer();
-            var jpVoice = SpeechSynth.GetInstalledVoices().FirstOrDefault(v =>
+            InstalledVoice? jpVoice = SpeechSynth.GetInstalledVoices().FirstOrDefault(v =>
                 v.VoiceInfo.Culture.Name.StartsWith("ja", StringComparison.OrdinalIgnoreCase)
             );
             if (jpVoice != null)
@@ -123,11 +117,7 @@ namespace Shinobu
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is string path)
-            {
-                return System.IO.Path.GetFileNameWithoutExtension(path);
-            }
-            return value;
+            return value is string path ? System.IO.Path.GetFileNameWithoutExtension(path) : value;
         }
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
@@ -146,12 +136,16 @@ namespace Shinobu
                 const long GB = MB * 1024;
 
                 if (bytes >= GB)
+                {
                     return $"{bytes / (double)GB:F1} GB";
+                }
+
                 if (bytes >= MB)
+                {
                     return $"{bytes / (double)MB:F1} MB";
-                if (bytes >= KB)
-                    return $"{bytes / (double)KB:F1} KB";
-                return $"{bytes} B";
+                }
+
+                return bytes >= KB ? $"{bytes / (double)KB:F1} KB" : $"{bytes} B";
             }
             return "0 B";
         }

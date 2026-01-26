@@ -14,7 +14,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid AllowDrop="True" Drop="Grid_Drop" DragOver="Grid_DragOver">
+    <Grid AllowDrop="True" Drop="Grid_Drop" DragOver="Grid_DragOver" DragLeave="Grid_DragLeave">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -76,5 +76,10 @@
             </NavigationView.MenuItems>
             <Frame x:Name="navFrame" />
         </NavigationView>
+
+        <Border Grid.Row="0" Grid.RowSpan="2" Visibility="{x:Bind IsDragOver, Mode=OneWay}" Background="#4D000000" BorderBrush="{StaticResource AccentAAFillColorDefaultBrush}" BorderThickness="3" CornerRadius="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBlock Text="Drop file here" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="White" />
+        </Border>
+
     </Grid>
 </Window>

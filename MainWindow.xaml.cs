@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Media.Animation;
 using Shinobu.Helpers;
 using Shinobu.Pages;
 using System;
+using System.ComponentModel;
 using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
@@ -12,9 +13,25 @@ using Windows.Storage;
 
 namespace Shinobu
 {
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow : Window, INotifyPropertyChanged
     {
         private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
+
+        private bool _isDragOver;
+        public bool IsDragOver
+        {
+            get => _isDragOver;
+            set
+            {
+                if (_isDragOver != value)
+                {
+                    _isDragOver = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDragOver)));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainWindow()
         {
@@ -90,6 +107,7 @@ namespace Shinobu
 
         private async void Grid_Drop(object sender, DragEventArgs e)
         {
+            IsDragOver = false;
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
                 var items = await e.DataView.GetStorageItemsAsync();
@@ -98,7 +116,7 @@ namespace Shinobu
                     var storageFile = items[0] as StorageFile;
                     if (storageFile != null)
                     {
-                        if (storageFile.FileType.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+                        if (SupportedFileTypes.Extensions.ContainsKey(storageFile.FileType.ToLower()))
                         {
                             string? libraryFolder = _settings.Values.TryGetValue("LibraryFolder", out object? v) ? v as string : null;
                             if (string.IsNullOrEmpty(libraryFolder))
@@ -121,6 +139,12 @@ namespace Shinobu
         private void Grid_DragOver(object sender, DragEventArgs e)
         {
             e.AcceptedOperation = DataPackageOperation.Copy;
+            IsDragOver = true;
+        }
+
+        private void Grid_DragLeave(object sender, DragEventArgs e)
+        {
+            IsDragOver = false;
         }
     }
 }
