@@ -11,7 +11,7 @@ Supports extensive customization of the reading experience, such as horizontal v
 
 Todo:
  - Finish up the selection dialog
- - Add epub and pdf reading functionality
+ - Add epub reading functionality, and image annotation functionality.
 
 Dependencies:
  - Kawazu
