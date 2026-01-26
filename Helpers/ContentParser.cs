@@ -1,12 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
 
 namespace Shinobu.Helpers
 {
-    public interface IContentParser { Task<string> ParseContentAsync(string filePath); }
+    public class ImageContent
+    {
+        public int Offset { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public string Base64Data { get; set; } = string.Empty;
+    }
+
+    public class BookContent
+    {
+        public string TextContent { get; set; } = string.Empty;
+        public List<ImageContent> Images { get; set; } = new();
+    }
+
+    public interface IContentParser { Task<BookContent> ParseContentAsync(string filePath); }
 
     public class SupportedFileTypes
     {
@@ -19,12 +34,16 @@ namespace Shinobu.Helpers
 
     public class TextContentParser : IContentParser
     {
-        public async Task<string> ParseContentAsync(string filePath) { return await Task.Run(() => File.ReadAllTextAsync(filePath)); }
+        public async Task<BookContent> ParseContentAsync(string filePath)
+        {
+            string text = await File.ReadAllTextAsync(filePath);
+            return new BookContent { TextContent = text };
+        }
     }
 
     public class PdfContentParser : IContentParser
     {
-        public async Task<string> ParseContentAsync(string filePath)
+        public async Task<BookContent> ParseContentAsync(string filePath)
         {
             using (var document = PdfDocument.Open(filePath))
             {
@@ -33,7 +52,33 @@ namespace Shinobu.Helpers
                 {
                     text += page.Text;
                 }
-                return await Task.FromResult(text);
+                var images = new List<ImageContent>();
+                int offset = 0;
+                foreach (var page in document.GetPages())
+                {
+                    foreach (var image in page.GetImages())
+                    {
+                        byte[] imageBytes;
+                        if (image.TryGetBytesAsMemory(out var memory))
+                        {
+                            imageBytes = memory.ToArray();
+                        }
+                        else
+                        {
+                            imageBytes = image.RawMemory.ToArray();
+                        }
+                        string base64Data = Convert.ToBase64String(imageBytes);
+                        images.Add(new ImageContent
+                        {
+                            Offset = offset,
+                            Width = image.WidthInSamples,
+                            Height = image.HeightInSamples,
+                            Base64Data = base64Data
+                        });
+                    }
+                    offset += page.Text.Length;
+                }
+                return new BookContent { TextContent = text, Images = images };
             }
         }
     }
