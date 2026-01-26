@@ -1,7 +1,9 @@
 ﻿using Kawazu;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Shinobu.Helpers
@@ -21,8 +23,18 @@ namespace Shinobu.Helpers
             if (string.IsNullOrWhiteSpace(text)) return text;
             if (text.Contains("<ruby>")) return text; // already has → skip
 
+            // Handle images
+            var imgTags = new List<string>();
+            var imgRegex = new Regex(@"<img[^>]*>", RegexOptions.IgnoreCase);
+            int imgIndex = 0;
+            string textWithoutImgs = imgRegex.Replace(text, match =>
+            {
+                imgTags.Add(match.Value);
+                return $"__IMG_{imgIndex++}__";
+            });
+
             var divisions = await _converter.GetDivisions(
-                text,
+                textWithoutImgs,
                 To.Hiragana,
                 Mode.Furigana,
                 RomajiSystem.Hepburn,
@@ -78,7 +90,12 @@ namespace Shinobu.Helpers
                 }
             }
 
-            return sb.ToString().Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+            string result = sb.ToString().Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+            for (int i = 0; i < imgTags.Count; i++)
+            {
+                result = result.Replace($"__IMG_{i}__", imgTags[i]);
+            }
+            return result;
         }
 
         private static bool ContainsKanji(string s)

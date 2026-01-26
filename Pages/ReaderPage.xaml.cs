@@ -9,12 +9,13 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Popups;
+using System.Text;
 
 namespace Shinobu.Pages
 {
@@ -34,6 +35,7 @@ namespace Shinobu.Pages
         private double _pageMargin;
         private string _theme = "System";
         private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
+        private BookContent _bookContent = new();
 
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
@@ -272,7 +274,7 @@ namespace Shinobu.Pages
             {
                 ReaderSessionManager.ClearSession();
                 MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
-                _ = await info.ShowAsync();
+                _= await info.ShowAsync();
                 return false;
             }
 
@@ -293,7 +295,8 @@ namespace Shinobu.Pages
         private async Task LoadBook()
         {
             if (!await CheckFileExists(_filePath)) { return; }
-            string content = await ContentParserFactory.GetParser(Path.GetExtension(_filePath)).ParseContentAsync(_filePath);
+            _bookContent = await ContentParserFactory.GetParser(Path.GetExtension(_filePath)).ParseContentAsync(_filePath);
+            string content = _bookContent.TextContent;
 
             double fontSize = ReaderFontSize;
             double lineHeight = LineHeight;
@@ -301,20 +304,42 @@ namespace Shinobu.Pages
             double webViewWidth = ReaderWebView.ActualWidth - (2 * pageMargin);
             double webViewHeight = ReaderWebView.ActualHeight - (2 * pageMargin);
 
-            double avgCharWidth = fontSize * 0.76;
+            double avgCharWidth = fontSize * 0.79;
             double avgLineHeight = (fontSize * lineHeight) + fontSize;
             int navHeight = 65;
 
             int charsPerLineApprox = (int)((webViewWidth - (IsVerticalText ? navHeight : 0)) / avgCharWidth);
-            int linesPerPageApprox = (int)((webViewHeight-navHeight) / avgLineHeight * 0.9);
+            int linesPerPageApprox = (int)((webViewHeight - navHeight) / avgLineHeight);
 
-            int targetCharsPerPage = charsPerLineApprox * linesPerPageApprox;
+            int defaultTgtPageChrs = charsPerLineApprox * linesPerPageApprox;
 
             _pages.Clear();
-            for (int i = 0; i < content.Length; i += targetCharsPerPage)
+            int offset = 0;
+            while (offset < content.Length)
             {
-                string page = content.Substring(i, Math.Min(targetCharsPerPage, content.Length - i));
-                _pages.Add(page);
+                int defaultTgt = defaultTgtPageChrs;
+                int end = Math.Min(offset + defaultTgt, content.Length);
+                string potentialPage = content.Substring(offset, end - offset);
+                var imagesInPotential = _bookContent.Images.Where(img => img.Offset >= offset && img.Offset < end).ToList();
+                double imgSpacePage = 0;
+                foreach (var img in imagesInPotential)
+                {
+                    imgSpacePage += IsVerticalText ? img.Width : img.Height;
+                }
+                double effHeight = webViewHeight - imgSpacePage;
+                int adjLPP = (int)((effHeight - navHeight) / avgLineHeight) - imagesInPotential.Count -1;
+                int actualTarget = charsPerLineApprox * adjLPP;
+                if (potentialPage.Length <= actualTarget)
+                {
+                    _pages.Add(potentialPage);
+                    offset = end;
+                }
+                else
+                {
+                    string page = potentialPage.Substring(0, actualTarget);
+                    _pages.Add(page);
+                    offset += actualTarget;
+                }
             }
             _currentPage = 0;
             OnPropertyChanged();
@@ -326,7 +351,20 @@ namespace Shinobu.Pages
             if (_pages.Count == 0) return;
 
             string text = _pages[_currentPage];
-            string furiganaText = await GenerateFurigana(text);
+            int pageStart = 0;
+            for (int i = 0; i < _currentPage; i++) pageStart += _pages[i].Length;
+            int pageEnd = pageStart + text.Length;
+            var imagesInPage = _bookContent.Images.Where(img => img.Offset >= pageStart && img.Offset < pageEnd).OrderByDescending(img => img.Offset).ToList();
+            StringBuilder sb = new(text);
+            foreach (var img in imagesInPage)
+            {
+                int pos = img.Offset - pageStart;
+                string initbr = pos > 0 && sb[pos - 1] != '\n' ? "<br/>" : string.Empty;
+                string imgTag = $"{initbr}<img src=\"data:image/png;base64,{img.Base64Data}\" width=\"{img.Width}\" height=\"{img.Height}\" style=\"max-width:100%; height:auto;\" /><br/>";
+                sb.Insert(pos, imgTag);
+            }
+            string pageTextWithImages = sb.ToString();
+            string furiganaText = await GenerateFurigana(pageTextWithImages);
 
             double fontSize = _fontSize;
             double lineHeight = _lineHeight;
