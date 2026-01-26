@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Shinobu.Helpers
 {
@@ -26,5 +27,13 @@ namespace Shinobu.Helpers
 
         [JsonProperty("offset")]
         public (int Start, int End) Offset { get; set; }
+
+        [JsonProperty("id")]
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        override public string ToString()
+        {
+            return $"{Text} ({Path.GetFileNameWithoutExtension(FilePath)}:{Offset.Start}-{Offset.End})";
+        }
     }
 }

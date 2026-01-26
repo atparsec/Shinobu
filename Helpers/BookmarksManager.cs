@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -64,6 +65,14 @@ namespace Shinobu.Helpers
                 await SaveAsync();
             }
             return;
+        }
+
+        internal List<Bookmark>? BookmarksSearch(string text)
+        {
+            return [.. Bookmarks.Where(
+                b => (b.Text + b.Note + string.Join(",",b.Tags)+b.FilePath)
+                .Contains(text, StringComparison.OrdinalIgnoreCase
+                ))];
         }
     }
 }

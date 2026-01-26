@@ -6,7 +6,12 @@
     xmlns:local="using:Shinobu.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}">
+
+    <Page.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Page.Resources>
 
     <Grid Padding="20">
         <Grid.RowDefinitions>
@@ -21,9 +26,8 @@
 
                         <Expander.Header>
                             <Grid
-                                ColumnSpacing="12"
                                 CornerRadius="12"
-                                Padding="12"
+                                Padding="12,12,0,12"
                                 >
 
                                 <Grid.ColumnDefinitions>
@@ -73,7 +77,7 @@
 
                                 <Button
                                     Grid.Column="2"
-                                    Style="{ThemeResource ButtonRevealStyle}"
+                                    Style="{ThemeResource DefaultButtonStyle}"
                                     Click="DeleteButton_Click"
                                     Tag="{x:Bind}"
                                     ToolTipService.ToolTip="Delete bookmark">
@@ -82,37 +86,27 @@
                             </Grid>
                         </Expander.Header>
                         <Expander.Content>
-                            <StackPanel Spacing="12" HorizontalAlignment="Stretch">
-                                <TextBlock
-                                        Text="Bookmarked Text"
-                                        FontSize="14"
-                                        FontWeight="SemiBold"/>
+
+                            <Grid Height="100" HorizontalAlignment="Stretch" RowSpacing="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
 
                                 <TextBlock
-                                        Text="{x:Bind Text}"
-                                        FontSize="16"
-                                        FontWeight="Medium"/>
-
-                                <Grid Height="100" HorizontalAlignment="Stretch">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock
                                         Grid.Row="0"
                                         Text="Bookmarked Text"
                                         FontSize="14"
                                         FontWeight="SemiBold"/>
 
-                                    <TextBlock
+                                <TextBlock
                                         Grid.Row="1"
                                         Text="{x:Bind Text}"
                                         FontSize="16"
                                         FontWeight="Medium"/>
 
-                                    <TextBox
+                                <TextBox
                                         Grid.Row="2"
                                         x:Name="NoteEditor"
                                         Text="{x:Bind Note, Mode=TwoWay}"
@@ -121,14 +115,21 @@
                                         AcceptsReturn="True"
                                         TextChanged="NoteEditor_TextChanged"/>
 
-                                </Grid>
-
-                            </StackPanel>
+                            </Grid>
                         </Expander.Content>
 
                     </Expander>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <Border Grid.Row="1" Visibility="{Binding IsBookmarksEmpty, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Viewbox Width="48" Height="48">
+                    <SymbolIcon Symbol="Bookmarks"/>
+                </Viewbox>
+                <TextBlock Text="No bookmarks" FontSize="24" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>
