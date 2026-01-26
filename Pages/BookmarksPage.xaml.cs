@@ -5,7 +5,9 @@ using Shinobu.Helpers;
 using System;
 
 namespace Shinobu.Pages;
+
 public sealed partial class BookmarksPage : Page
+
 {
     public BookmarksPage()
     {
@@ -34,57 +36,20 @@ public sealed partial class BookmarksPage : Page
         {
             if (App.MainWindowInstance is MainWindow)
             {
-                Frame.Navigate(typeof(ReaderPage), (bookmark.FilePath+";"+bookmark.PageNumber));
+                Frame.Navigate(typeof(ReaderPage), ($"{bookmark.FilePath};{bookmark.PageNumber};{bookmark.Offset.Start};{bookmark.Offset.End}"));
             }
         }
     }
 
-    private void NoteView_Tapped(object sender, TappedRoutedEventArgs e)
+
+    private void NoteEditor_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var noteView = (FrameworkElement)sender;
-        var container = noteView.Parent as FrameworkElement;
-        if (container == null) return;
-
-        var noteEditor = container.FindName("NoteEditor") as TextBox;
-        if (noteEditor == null) return;
-
-        noteView.Visibility = Visibility.Collapsed;
-        noteEditor.Visibility = Visibility.Visible;
-        noteEditor.Focus(FocusState.Programmatic);
-    }
-
-    private void NoteEditor_LostFocus(object sender, RoutedEventArgs e)
-    {
-        ExitEditMode(sender);
-    }
-
-    private void NoteEditor_KeyDown(object sender, KeyRoutedEventArgs e)
-    {
-        if (e.Key == Windows.System.VirtualKey.Enter &&
-            !((TextBox)sender).AcceptsReturn)
+        if (sender is TextBox textBox && textBox.Tag is Bookmark bookmark)
         {
-            ExitEditMode(sender);
+            if (bookmark == null || App.BookmarksManager == null)
+                return;
+            _ = App.BookmarksManager!.UpdateBookmarkNoteAsync(bookmark, textBox.Text);
         }
+
     }
-
-    private void ExitEditMode(object sender)
-    {
-        var noteEditor = (FrameworkElement)sender;
-        var container = noteEditor.Parent as FrameworkElement;
-        if (container == null) return;
-
-        var noteView = container.FindName("NoteView") as FrameworkElement;
-        if (noteView == null) return;
-
-        noteEditor.Visibility = Visibility.Collapsed;
-        noteView.Visibility = Visibility.Visible;
-
-        App.BookmarksManager?.UpdateBookmarkNoteAsync(
-            (noteEditor.Tag as Bookmark)!,
-            (noteEditor as TextBox)!.Text);
-
-        (noteView as TextBlock)!.Text = (noteEditor as TextBox)!.Text;
-    }
-
-
 }

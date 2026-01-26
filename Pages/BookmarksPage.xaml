@@ -17,7 +17,7 @@
         <ListView x:Name="BookmarksListView" SelectionMode="None" Grid.Row="1" HorizontalContentAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Bookmark">
-                    <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                    <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
 
                         <Expander.Header>
                             <Grid
@@ -82,7 +82,7 @@
                             </Grid>
                         </Expander.Header>
                         <Expander.Content>
-                            <StackPanel Spacing="12">
+                            <StackPanel Spacing="12" HorizontalAlignment="Stretch">
                                 <TextBlock
                                         Text="Bookmarked Text"
                                         FontSize="14"
@@ -93,50 +93,35 @@
                                         FontSize="16"
                                         FontWeight="Medium"/>
 
-                                <StackPanel Spacing="6">
+                                <Grid Height="100" HorizontalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
 
                                     <TextBlock
+                                        Grid.Row="0"
                                         Text="Bookmarked Text"
                                         FontSize="14"
                                         FontWeight="SemiBold"/>
 
                                     <TextBlock
+                                        Grid.Row="1"
                                         Text="{x:Bind Text}"
                                         FontSize="16"
                                         FontWeight="Medium"/>
 
-                                    <Grid x:Name="NoteView"
-                                          Tapped="NoteView_Tapped"
-                                          >
-
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <FontIcon
-                                            Glyph="&#xE70F;"
-                                            FontFamily="Segoe MDL2 Assets"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                            Margin="0,2,6,0"/>
-                                        <TextBlock
-                                            Grid.Column="1"
-                                            Text="{x:Bind Note}"
-                                            FontSize="14"
-                                            TextWrapping="Wrap"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    </Grid>
-                                    
                                     <TextBox
+                                        Grid.Row="2"
                                         x:Name="NoteEditor"
                                         Text="{x:Bind Note, Mode=TwoWay}"
                                         FontSize="14"
                                         TextWrapping="Wrap"
                                         AcceptsReturn="True"
-                                        Visibility="Collapsed"
-                                        LostFocus="NoteEditor_LostFocus"
-                                        KeyDown="NoteEditor_KeyDown"/>
-                                </StackPanel>
+                                        TextChanged="NoteEditor_TextChanged"/>
+
+                                </Grid>
 
                             </StackPanel>
                         </Expander.Content>

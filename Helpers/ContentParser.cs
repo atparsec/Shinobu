@@ -12,7 +12,7 @@ namespace Shinobu.Helpers
     {
         public static readonly Dictionary<string, string> Extensions = new()
         {
-            { ".txt", "Plaintext" },
+            { ".txt", "Plain Text" },
             { ".pdf", "PDF" }
         };
     }

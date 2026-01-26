@@ -23,5 +23,8 @@ namespace Shinobu.Helpers
 
         [JsonProperty("dateAdded")]
         public DateTime DateAdded { get; set; }
+
+        [JsonProperty("offset")]
+        public (int Start, int End) Offset { get; set; }
     }
 }

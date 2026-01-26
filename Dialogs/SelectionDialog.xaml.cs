@@ -15,14 +15,16 @@ namespace Shinobu.Dialogs
     {
         public string SelectedText { get; set; }
         public Action? CloseAction { get; set; }
-        public int pageNumber { get; set; }
-        public string filePath { get; set; }
+        public int PageNumber { get; set; }
+        public string FilePath { get; set; }
+        public (int Start, int End) Offset { get; set; }
 
-        public SelectionDialog(string selectedText, int pageNumber, string filePath)
+        public SelectionDialog(int start, int end, string selectedText, int pageNumber, string filePath)
         {
             SelectedText = selectedText;
-            this.pageNumber = pageNumber;
-            this.filePath = filePath;
+            PageNumber = pageNumber;
+            FilePath = filePath;
+            Offset = (start, end);
             InitializeComponent();
 
             string trimmed = selectedText.Length > 5 ? selectedText[..5] + "..." : selectedText;
@@ -57,7 +59,7 @@ namespace Shinobu.Dialogs
                 foreach (string tag in def.Tags)
                 {
                     string color = UIColorHelper.HashStringToColor(tag);
-                    var border = new Border
+                    Border border = new()
                     {
                         Background = new SolidColorBrush(new Windows.UI.Color
                         {
@@ -137,7 +139,7 @@ namespace Shinobu.Dialogs
                 return;
             }
 
-            var data = new DataPackage();
+            DataPackage data = new();
             data.SetText(text);
 
             Clipboard.SetContent(data);
@@ -172,13 +174,14 @@ namespace Shinobu.Dialogs
         {
             if (App.BookmarksManager != null)
             {
-                var bookmark = new Bookmark
+                Bookmark bookmark = new()
                 {
                     Text = SelectedText,
                     Note = string.Join("; ", DefinitionsList.Items.Cast<dynamic>().Select(m => m.Text)),
                     Tags = [.. TagsPanel.Children.Cast<Border>().Select(b => ((TextBlock)b.Child).Text)],
-                    PageNumber = pageNumber + 1,
-                    FilePath = filePath
+                    PageNumber = PageNumber + 1,
+                    Offset = Offset,
+                    FilePath = FilePath
                 };
                 _ = App.BookmarksManager.AddBookmarkAsync(bookmark);
             }

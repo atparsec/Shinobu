@@ -9,6 +9,7 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -138,7 +139,7 @@ namespace Shinobu.Pages
             _lineHeight = _settings.Values.TryGetValue("LineHeight", out object? lh) && lh is double lhd ? lhd : 3.0;
             _readerFont = _settings.Values.TryGetValue("FontFamily", out object? ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
             _pageMargin = _settings.Values.TryGetValue("PageMargin", out object? pm) && pm is double pmd ? pmd : 20.0;
-            _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "System";
+            _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "Dark";
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -158,15 +159,28 @@ namespace Shinobu.Pages
 
                             var selectedText = fragment.textContent;
                             if (selectedText.trim()) {
-                                window.chrome.webview.postMessage('selected:' + selectedText);
+                                var bodyText = document.body.textContent || document.body.innerText;
+                                var startOffset = getTextOffset(document.body, range.startContainer, range.startOffset);
+                                window.chrome.webview.postMessage('selected:' + startOffset + ':' + selectedText);
                             }
                         }
                     });
+                    function getTextOffset(root, node, offset) {
+                        var text = '';
+                        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                        var currentNode;
+                        while (currentNode = walker.nextNode()) {
+                            if (currentNode === node) {
+                                return text.length + offset;
+                            }
+                            text += currentNode.textContent;
+                        }
+                        return text.length;
+                    }
                     window.__selectionListenerAttached = true;
                 }
         ");
         }
-
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -178,16 +192,57 @@ namespace Shinobu.Pages
             await ReaderWebView.EnsureCoreWebView2Async();
             if (e.Parameter is string path)
             {
-                _filePath = path.Split(';')[0];
+                string[] parts = path.Split(';');
+                _filePath = parts[0];
                 await LoadBook();
-                if (path.Contains(';'))
+
+                if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
                 {
-                    string[] parts = path.Split(';');
-                    if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
+                    _currentPage = Math.Min(pageNum - 1, _pages.Count - 1);
+                    OnPropertyChanged();
+                    await DisplayCurrentPage();
+                }
+                if (parts.Length > 3 && int.TryParse(parts[2], out int offset) && int.TryParse(parts[3], out int endOffset))
+                {
+                    int cumulativeLength = 0;
+                    for (int i = 0; i < _pages.Count; i++)
                     {
-                        _currentPage = Math.Min(pageNum - 1, _pages.Count - 1);
-                        OnPropertyChanged();
-                        await DisplayCurrentPage();
+                        int pageLength = _pages[i].Length;
+                        if (cumulativeLength + pageLength >= offset)
+                        {
+                            _currentPage = i;
+                            OnPropertyChanged();
+                            await DisplayCurrentPage();
+                            int offsetInPage = offset - cumulativeLength;
+                            int lengthInPage = Math.Min(endOffset, pageLength - offsetInPage);
+                            await ReaderWebView.ExecuteScriptAsync($@"
+                                var range = document.createRange();
+                                var selection = window.getSelection();
+                                function getTextNodeAtOffset(root, offset) {{
+                                    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                                    var currentNode;
+                                    var currentOffset = 0;
+                                    while (currentNode = walker.nextNode()) {{
+                                        var nodeLength = currentNode.textContent.length;
+                                        if (currentOffset + nodeLength >= offset) {{
+                                            return {{ node: currentNode, offset: offset - currentOffset }};
+                                        }}
+                                        currentOffset += nodeLength;
+                                    }}
+                                    return null;
+                                }}
+                                var startInfo = getTextNodeAtOffset(document.body, {offsetInPage});
+                                var endInfo = getTextNodeAtOffset(document.body, {offsetInPage + lengthInPage});
+                                if (startInfo && endInfo) {{
+                                    range.setStart(startInfo.node, startInfo.offset);
+                                    range.setEnd(endInfo.node, endInfo.offset);
+                                    selection.removeAllRanges();
+                                    selection.addRange(range);
+                                }}
+                            ");
+                            break;
+                        }
+                        cumulativeLength += pageLength;
                     }
                 }
             }
@@ -197,13 +252,6 @@ namespace Shinobu.Pages
                 if (sessionFilePath != null && File.Exists(sessionFilePath))
                 {
                     _filePath = sessionFilePath;
-                    if (!File.Exists(_filePath))
-                    {
-                        ReaderSessionManager.ClearSession();
-                        MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
-                        _ = await info.ShowAsync();
-                        return;
-                    }
                     await LoadBook();
                     _currentPage = Math.Min(sessionPage, _pages.Count - 1);
                     OnPropertyChanged();
@@ -216,6 +264,19 @@ namespace Shinobu.Pages
                 mainWindow.SelectReaderNavigation();
             }
 
+        }
+
+        private async Task<bool> CheckFileExists(string path)
+        {
+            if (!File.Exists(path))
+            {
+                ReaderSessionManager.ClearSession();
+                MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
+                _ = await info.ShowAsync();
+                return false;
+            }
+
+            return true;
         }
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
@@ -231,6 +292,7 @@ namespace Shinobu.Pages
 
         private async Task LoadBook()
         {
+            if (!await CheckFileExists(_filePath)) { return; }
             string content = await ContentParserFactory.GetParser(Path.GetExtension(_filePath)).ParseContentAsync(_filePath);
 
             double fontSize = ReaderFontSize;
@@ -355,16 +417,24 @@ namespace Shinobu.Pages
             string message = args.TryGetWebMessageAsString();
             if (message.StartsWith("selected:"))
             {
-                string selectedText = message["selected:".Length..];
-                await ShowSelectedTextPopup(selectedText);
+                string[] parts = message["selected:".Length..].Split(':', 2);
+                if (parts.Length == 2 && int.TryParse(parts[0], out int start))
+                {
+                    string selectedText = parts[1];
+                    await ShowSelectedTextPopup(selectedText, start);
+                }
             }
         }
 
-        private async Task ShowSelectedTextPopup(string text)
+        private async Task ShowSelectedTextPopup(string text, int start)
         {
             if (_isDialogShowing) return;
             _isDialogShowing = true;
-            var dialog = new SelectionDialog(text, _currentPage, _filePath);
+            for (int i = 0; i < _currentPage; i++)
+            {
+                start += _pages[i].Length;
+            }
+            var dialog = new SelectionDialog(start, text.Length, text, _currentPage, _filePath);
             var overlay = new Grid
             {
                 Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
