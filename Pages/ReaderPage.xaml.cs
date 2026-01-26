@@ -145,25 +145,25 @@ namespace Shinobu.Pages
 
         private async void ReaderWebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
         {
-            await sender.ExecuteScriptAsync(@"
-        if (!window.__selectionListenerAttached) {
-            document.addEventListener('mouseup', function () {
-                var selection = window.getSelection();
+            _ = await sender.ExecuteScriptAsync(@"
+                if (!window.__selectionListenerAttached) {
+                    document.addEventListener('mouseup', function () {
+                        var selection = window.getSelection();
 
-                if (selection.rangeCount) {
-                    var range = selection.getRangeAt(0);
-                    var fragment = range.cloneContents();
+                        if (selection.rangeCount) {
+                            var range = selection.getRangeAt(0);
+                            var fragment = range.cloneContents();
 
-                    fragment.querySelectorAll('.furigana').forEach(el => el.remove());
+                            fragment.querySelectorAll('.furigana').forEach(el => el.remove());
 
-                    var selectedText = fragment.textContent;
-                    if (selectedText.trim()) {
-                        window.chrome.webview.postMessage('selected:' + selectedText);
-                    }
+                            var selectedText = fragment.textContent;
+                            if (selectedText.trim()) {
+                                window.chrome.webview.postMessage('selected:' + selectedText);
+                            }
+                        }
+                    });
+                    window.__selectionListenerAttached = true;
                 }
-            });
-            window.__selectionListenerAttached = true;
-        }
         ");
         }
 
@@ -171,12 +171,9 @@ namespace Shinobu.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
+            ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
 
-            if (anim != null)
-            {
-                anim.TryStart(ReaderWebView);
-            }
+            _ = anim?.TryStart(ReaderWebView);
 
             await ReaderWebView.EnsureCoreWebView2Async();
             if (e.Parameter is string path)
@@ -188,7 +185,7 @@ namespace Shinobu.Pages
                     string[] parts = path.Split(';');
                     if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
                     {
-                        _currentPage = Math.Min(pageNum-1, _pages.Count - 1);
+                        _currentPage = Math.Min(pageNum - 1, _pages.Count - 1);
                         OnPropertyChanged();
                         await DisplayCurrentPage();
                     }
@@ -204,7 +201,7 @@ namespace Shinobu.Pages
                     {
                         ReaderSessionManager.ClearSession();
                         MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
-                        await info.ShowAsync();
+                        _ = await info.ShowAsync();
                         return;
                     }
                     await LoadBook();
@@ -234,21 +231,21 @@ namespace Shinobu.Pages
 
         private async Task LoadBook()
         {
-            string content = await File.ReadAllTextAsync(_filePath);
+            string content = await ContentParserFactory.GetParser(Path.GetExtension(_filePath)).ParseContentAsync(_filePath);
 
             double fontSize = ReaderFontSize;
             double lineHeight = LineHeight;
             double pageMargin = ReaderMargin;
-            double webViewWidth = ReaderWebView.ActualWidth - 2 * pageMargin;
-            double webViewHeight = ReaderWebView.ActualHeight - 2 * pageMargin;
+            double webViewWidth = ReaderWebView.ActualWidth - (2 * pageMargin);
+            double webViewHeight = ReaderWebView.ActualHeight - (2 * pageMargin);
 
             double avgCharWidth = fontSize * 0.76;
-            double avgLineHeight = fontSize * lineHeight + fontSize;
+            double avgLineHeight = (fontSize * lineHeight) + fontSize;
 
             int charsPerLineApprox = (int)(webViewWidth / avgCharWidth);
             int linesPerPageApprox = (int)(webViewHeight / avgLineHeight * 0.85) - (IsVerticalText ? 1 : 0);
 
-            int targetCharsPerPage = (int)(charsPerLineApprox * linesPerPageApprox );
+            int targetCharsPerPage = charsPerLineApprox * linesPerPageApprox;
 
             _pages.Clear();
             for (int i = 0; i < content.Length; i += targetCharsPerPage)
@@ -268,8 +265,6 @@ namespace Shinobu.Pages
             string text = _pages[_currentPage];
             string furiganaText = await GenerateFurigana(text);
 
-            // set to webview
-
             double fontSize = _fontSize;
             double lineHeight = _lineHeight;
             string fontFamily = _readerFont.Source;
@@ -287,7 +282,7 @@ namespace Shinobu.Pages
             }
             string gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight*fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px;";
+            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight * fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
@@ -315,7 +310,7 @@ namespace Shinobu.Pages
 
         private async Task<string> GenerateFurigana(string text)
         {
-            return (await _furiganaGenerator.GenerateHtmlFuriganaAsync(text, UserJlptLevel)).Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+            return (await _furiganaGenerator.GenerateHtmlFuriganaAsync(text, UserJlptLevel));
         }
 
         public async Task UpdateDisplayAsync()
@@ -350,9 +345,9 @@ namespace Shinobu.Pages
                 Title = "Page Options",
                 Content = new PageOptionsDialog(this),
                 CloseButtonText = "Close",
-                XamlRoot = this.XamlRoot
+                XamlRoot = XamlRoot
             };
-            await dialog.ShowAsync();
+            _ = await dialog.ShowAsync();
         }
 
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
@@ -376,17 +371,17 @@ namespace Shinobu.Pages
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
-            Action closeDialog = () =>
+            void closeDialog()
             {
                 (this.Content as Panel)?.Children.Remove(overlay);
                 (this.Content as Panel)?.Children.Remove(dialog);
                 _isDialogShowing = false;
                 _ = ReaderWebView.ExecuteScriptAsync("window.getSelection().removeAllRanges();");
-            };
+            }
             dialog.CloseAction = closeDialog;
             overlay.PointerPressed += (s, e) => closeDialog();
-            (this.Content as Panel)?.Children.Add(overlay);
-            (this.Content as Panel)?.Children.Add(dialog);
+            (Content as Panel)?.Children.Add(overlay);
+            (Content as Panel)?.Children.Add(dialog);
             dialog.HorizontalAlignment = HorizontalAlignment.Center;
             dialog.VerticalAlignment = VerticalAlignment.Center;
         }

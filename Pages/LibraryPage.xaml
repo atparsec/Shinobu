@@ -68,6 +68,11 @@
                                 Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
                                 FontSize="11"
                                 />
+                            
+                            <TextBlock
+                                Text="{Binding ExtensionName}"
+                                FontSize="11"
+                                />
 
                             <TextBlock
                                 Text="{Binding DateModified}"

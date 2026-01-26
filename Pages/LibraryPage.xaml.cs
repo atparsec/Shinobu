@@ -37,7 +37,7 @@ namespace Shinobu.Pages
                 return;
             }
 
-            string[] files = await Task.Run(() => Directory.GetFiles(libraryPath, "*.txt", SearchOption.TopDirectoryOnly));
+            string[] files = await Task.Run(() => Directory.GetFiles(libraryPath, "*.*", SearchOption.TopDirectoryOnly).Where(f => SupportedFileTypes.Extensions.ContainsKey(Path.GetExtension(f).ToLower())).ToArray());
             List<string> favorites = LoadFavorites();
 
             foreach (string? file in files)
@@ -151,6 +151,8 @@ namespace Shinobu.Pages
         public string PreviewText { get; set; } = string.Empty;
 
         public string FileNameStripped => System.IO.Path.GetFileNameWithoutExtension(FileName);
+
+        public string ExtensionName => SupportedFileTypes.Extensions.TryGetValue(System.IO.Path.GetExtension(FileName).ToLower(), out string? name) ? name : "Unknown";
 
         public string BookColor => "#22" + UIColorHelper.HashStringToColor(FileName)[1..];
     }
