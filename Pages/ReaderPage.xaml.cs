@@ -359,8 +359,8 @@ namespace Shinobu.Pages
             foreach (var img in imagesInPage)
             {
                 int pos = img.Offset - pageStart;
-                string initbr = pos > 0 && sb[pos - 1] != '\n' ? "<br/>" : string.Empty;
-                string imgTag = $"{initbr}<img src=\"data:image/png;base64,{img.Base64Data}\" width=\"{img.Width}\" height=\"{img.Height}\" style=\"max-width:100%; height:auto;\" /><br/>";
+                string initbr = pos > 0 && sb[pos - 1] != '\n' ? "<br/><br/>" : string.Empty;
+                string imgTag = $"{initbr}<img src=\"data:image/png;base64,{img.Base64Data}\" width=\"{img.Width}\" height=\"{img.Height}\" style=\"max-width:100%; height:auto;\" /><br/><br/>";
                 sb.Insert(pos, imgTag);
             }
             string pageTextWithImages = sb.ToString();
