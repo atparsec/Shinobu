@@ -303,9 +303,10 @@ namespace Shinobu.Pages
 
             double avgCharWidth = fontSize * 0.76;
             double avgLineHeight = (fontSize * lineHeight) + fontSize;
+            int navHeight = 65;
 
-            int charsPerLineApprox = (int)(webViewWidth / avgCharWidth);
-            int linesPerPageApprox = (int)(webViewHeight / avgLineHeight * 0.85) - (IsVerticalText ? 1 : 0);
+            int charsPerLineApprox = (int)((webViewWidth - (IsVerticalText ? navHeight : 0)) / avgCharWidth);
+            int linesPerPageApprox = (int)((webViewHeight-navHeight) / avgLineHeight * 0.9);
 
             int targetCharsPerPage = charsPerLineApprox * linesPerPageApprox;
 
@@ -344,7 +345,7 @@ namespace Shinobu.Pages
             }
             string gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight * fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px;";
+            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight * fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px; overflow: hidden;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
