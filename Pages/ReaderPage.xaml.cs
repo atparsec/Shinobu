@@ -327,7 +327,7 @@ namespace Shinobu.Pages
                     imgSpacePage += IsVerticalText ? img.Width : img.Height;
                 }
                 double effHeight = webViewHeight - imgSpacePage;
-                int adjLPP = (int)((effHeight - navHeight) / avgLineHeight) - imagesInPotential.Count -1;
+                int adjLPP = (int)((effHeight - navHeight) / avgLineHeight) - 1 - imagesInPotential.Count;
                 int actualTarget = charsPerLineApprox * adjLPP;
                 if (potentialPage.Length <= actualTarget)
                 {
@@ -341,7 +341,7 @@ namespace Shinobu.Pages
                     offset += actualTarget;
                 }
             }
-            _currentPage = 0;
+            _currentPage = Math.Min(_currentPage, _pages.Count - 1);
             OnPropertyChanged();
             await DisplayCurrentPage();
         }
@@ -383,11 +383,13 @@ namespace Shinobu.Pages
             }
             string gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight * fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px; overflow: hidden;";
+            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight * fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px; overflow: hidden; word-wrap: break-word;";
             if (_isVerticalText)
             {
                 bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
             }
+
+            furiganaText = furiganaText.Replace("\n", "<br/>");
 
             string html = $@"
                 <html>

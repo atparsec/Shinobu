@@ -22,6 +22,7 @@ namespace Shinobu.Helpers
         {
             if (string.IsNullOrWhiteSpace(text)) return text;
             if (text.Contains("<ruby>")) return text; // already has → skip
+            if (!ContainsKanji(text)) return text;
 
             // Handle images
             var imgTags = new List<string>();
@@ -90,7 +91,7 @@ namespace Shinobu.Helpers
                 }
             }
 
-            string result = sb.ToString().Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+            string result = sb.ToString();
             for (int i = 0; i < imgTags.Count; i++)
             {
                 result = result.Replace($"__IMG_{i}__", imgTags[i]);

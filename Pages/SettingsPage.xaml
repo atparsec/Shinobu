@@ -12,6 +12,21 @@
         <StackPanel Padding="24" Spacing="30">
             <TextBlock Text="Settings" FontSize="32" FontWeight="Bold" />
 
+            <!-- About -->
+            <Expander x:Name="AboutSection" Header="About" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Margin="8,8,0,0" Spacing="12">
+                    <Image 
+                            Source="/Assets/Wide310x150Logo.scale-200.png" 
+                        Height="100"
+                            HorizontalAlignment="Left" 
+                       />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="Version" VerticalAlignment="Center" Width="160" />
+                        <TextBlock Text="1.0.0 (preview)" VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
             <!-- General -->
             <Expander x:Name="GeneralSection" Header="General" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                 <StackPanel Margin="8,8,0,0" Spacing="12">
@@ -64,20 +79,6 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
                         <TextBlock Text="Enter API Key" VerticalAlignment="Center" Width="160" />
                         <PasswordBox x:Name="ApiKeyBox" Width="420" PlaceholderText="Paste API key here" PasswordChanged="ApiKeyBox_PasswordChanged" />
-                    </StackPanel>
-                </StackPanel>
-            </Expander>
-
-            <!-- About -->
-            <Expander x:Name="AboutSection" Header="About" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
-                <StackPanel Margin="8,8,0,0" Spacing="12">
-                    <TextBlock TextWrapping="Wrap">
-                        TODO
-                    </TextBlock>
-
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="Version" VerticalAlignment="Center" Width="160" />
-                        <TextBlock Text="1.0.0 (preview)" VerticalAlignment="Center" />
                     </StackPanel>
                 </StackPanel>
             </Expander>
