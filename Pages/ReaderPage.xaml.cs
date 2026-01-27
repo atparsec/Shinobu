@@ -11,11 +11,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Popups;
-using System.Text;
 
 namespace Shinobu.Pages
 {
@@ -217,7 +217,7 @@ namespace Shinobu.Pages
                             await DisplayCurrentPage();
                             int offsetInPage = offset - cumulativeLength;
                             int lengthInPage = Math.Min(endOffset, pageLength - offsetInPage);
-                            await ReaderWebView.ExecuteScriptAsync($@"
+                            _ = await ReaderWebView.ExecuteScriptAsync($@"
                                 var range = document.createRange();
                                 var selection = window.getSelection();
                                 function getTextNodeAtOffset(root, offset) {{
@@ -274,7 +274,7 @@ namespace Shinobu.Pages
             {
                 ReaderSessionManager.ClearSession();
                 MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
-                _= await info.ShowAsync();
+                _ = await info.ShowAsync();
                 return false;
             }
 
@@ -319,8 +319,8 @@ namespace Shinobu.Pages
             {
                 int defaultTgt = defaultTgtPageChrs;
                 int end = Math.Min(offset + defaultTgt, content.Length);
-                string potentialPage = content.Substring(offset, end - offset);
-                var imagesInPotential = _bookContent.Images.Where(img => img.Offset >= offset && img.Offset < end).ToList();
+                string potentialPage = content[offset..end];
+                List<ImageContent> imagesInPotential = _bookContent.Images.Where(img => img.Offset >= offset && img.Offset < end).ToList();
                 double imgSpacePage = 0;
                 foreach (var img in imagesInPotential)
                 {
@@ -336,7 +336,7 @@ namespace Shinobu.Pages
                 }
                 else
                 {
-                    string page = potentialPage.Substring(0, actualTarget);
+                    string page = potentialPage[..actualTarget];
                     _pages.Add(page);
                     offset += actualTarget;
                 }
@@ -354,7 +354,7 @@ namespace Shinobu.Pages
             int pageStart = 0;
             for (int i = 0; i < _currentPage; i++) pageStart += _pages[i].Length;
             int pageEnd = pageStart + text.Length;
-            var imagesInPage = _bookContent.Images.Where(img => img.Offset >= pageStart && img.Offset < pageEnd).OrderByDescending(img => img.Offset).ToList();
+            List<ImageContent> imagesInPage = _bookContent.Images.Where(img => img.Offset >= pageStart && img.Offset < pageEnd).OrderByDescending(img => img.Offset).ToList();
             StringBuilder sb = new(text);
             foreach (var img in imagesInPage)
             {
@@ -413,12 +413,7 @@ namespace Shinobu.Pages
 
         private async Task<string> GenerateFurigana(string text)
         {
-            return (await _furiganaGenerator.GenerateHtmlFuriganaAsync(text, UserJlptLevel));
-        }
-
-        public async Task UpdateDisplayAsync()
-        {
-            await DisplayCurrentPage();
+            return await _furiganaGenerator.GenerateHtmlFuriganaAsync(text, UserJlptLevel);
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
@@ -443,14 +438,14 @@ namespace Shinobu.Pages
 
         private async void PageOptionsButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ContentDialog()
+            ContentDialog dialog = new()
             {
                 Title = "Page Options",
                 Content = new PageOptionsDialog(this),
                 CloseButtonText = "Close",
                 XamlRoot = XamlRoot
             };
-            _ = await dialog.ShowAsync();
+            await dialog.ShowAsync();
         }
 
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
@@ -475,8 +470,8 @@ namespace Shinobu.Pages
             {
                 start += _pages[i].Length;
             }
-            var dialog = new SelectionDialog(start, text.Length, text, _currentPage, _filePath);
-            var overlay = new Grid
+            SelectionDialog dialog = new(start, text.Length, text, _currentPage, _filePath);
+            Grid overlay = new()
             {
                 Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
                 HorizontalAlignment = HorizontalAlignment.Stretch,
