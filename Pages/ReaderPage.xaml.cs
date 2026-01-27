@@ -9,9 +9,11 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
@@ -22,7 +24,8 @@ namespace Shinobu.Pages
     public sealed partial class ReaderPage : Page, INotifyPropertyChanged
     {
         private string _filePath = string.Empty;
-        private List<string> _pages = [];
+        private List<int> _pages = [];
+
         private int _currentPage = 0;
         private bool _isDialogShowing = false;
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -37,6 +40,7 @@ namespace Shinobu.Pages
         private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
         private BookContent _bookContent = new();
 
+        private TaskCompletionSource _pagesLoaded;
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
         public string PageText => $"{_currentPage + 1} / {_pages.Count}";
@@ -111,6 +115,7 @@ namespace Shinobu.Pages
                 {
                     _pageMargin = value;
                     _settings.Values["PageMargin"] = value;
+                    ReaderWebView.Margin = new Thickness(value);
                     _ = LoadBook();
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
@@ -126,7 +131,7 @@ namespace Shinobu.Pages
                 {
                     _userJlptLevel = value;
                     _settings.Values["JlptLevel"] = (int)value;
-                    _ = DisplayCurrentPage();
+                    _ = LoadBook();
                     OnPropertyChanged(nameof(UserJlptLevel));
                 }
             }
@@ -140,50 +145,51 @@ namespace Shinobu.Pages
             _fontSize = _settings.Values.TryGetValue("FontSize", out object? fs) && fs is double fsd ? fsd : 16.0;
             _lineHeight = _settings.Values.TryGetValue("LineHeight", out object? lh) && lh is double lhd ? lhd : 3.0;
             _readerFont = _settings.Values.TryGetValue("FontFamily", out object? ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
-            _pageMargin = _settings.Values.TryGetValue("PageMargin", out object? pm) && pm is double pmd ? pmd : 20.0;
+            _pageMargin = _settings.Values.TryGetValue("PageMargin", out object? pm) && pm is double pmd ? pmd : 30.0;
             _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "Dark";
+            ReaderWebView.Margin = new Thickness(_pageMargin);
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
 
         private async void ReaderWebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
         {
-            _ = await sender.ExecuteScriptAsync(@"
-                if (!window.__selectionListenerAttached) {
-                    document.addEventListener('mouseup', function () {
+            await sender.ExecuteScriptAsync($@"
+                goToPage({_currentPage});
+                if (!window.__selectionListenerAttached) {{
+                    document.addEventListener('mouseup', function () {{
                         var selection = window.getSelection();
 
-                        if (selection.rangeCount) {
+                        if (selection.rangeCount) {{
                             var range = selection.getRangeAt(0);
                             var fragment = range.cloneContents();
 
                             fragment.querySelectorAll('.furigana').forEach(el => el.remove());
 
                             var selectedText = fragment.textContent;
-                            if (selectedText.trim()) {
+                            if (selectedText.trim()) {{
                                 var bodyText = document.body.textContent || document.body.innerText;
                                 var startOffset = getTextOffset(document.body, range.startContainer, range.startOffset);
                                 window.chrome.webview.postMessage('selected:' + startOffset + ':' + selectedText);
-                            }
-                        }
-                    });
-                    function getTextOffset(root, node, offset) {
+                            }}
+                        }}
+                    }});
+                    function getTextOffset(root, node, offset) {{
                         var text = '';
                         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
                         var currentNode;
-                        while (currentNode = walker.nextNode()) {
-                            if (currentNode === node) {
+                        while (currentNode = walker.nextNode()) {{
+                            if (currentNode === node) {{
                                 return text.length + offset;
-                            }
+                            }}
                             text += currentNode.textContent;
-                        }
+                        }}
                         return text.length;
-                    }
+                    }}
                     window.__selectionListenerAttached = true;
-                }
-        ");
+                }}
+            ");
         }
-
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -197,55 +203,16 @@ namespace Shinobu.Pages
                 string[] parts = path.Split(';');
                 _filePath = parts[0];
                 await LoadBook();
+                await _pagesLoaded.Task;
 
                 if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
                 {
-                    _currentPage = Math.Min(pageNum - 1, _pages.Count - 1);
-                    OnPropertyChanged();
-                    await DisplayCurrentPage();
+                    await GoToPage(Math.Min(pageNum, _pages.Count - 1));
                 }
-                if (parts.Length > 3 && int.TryParse(parts[2], out int offset) && int.TryParse(parts[3], out int endOffset))
+                if (parts.Length > 4 && int.TryParse(parts[2], out int offset) && int.TryParse(parts[3], out int endOffset) && int.TryParse(parts[4], out int pageNo))
                 {
-                    int cumulativeLength = 0;
-                    for (int i = 0; i < _pages.Count; i++)
-                    {
-                        int pageLength = _pages[i].Length;
-                        if (cumulativeLength + pageLength >= offset)
-                        {
-                            _currentPage = i;
-                            OnPropertyChanged();
-                            await DisplayCurrentPage();
-                            int offsetInPage = offset - cumulativeLength;
-                            int lengthInPage = Math.Min(endOffset, pageLength - offsetInPage);
-                            _ = await ReaderWebView.ExecuteScriptAsync($@"
-                                var range = document.createRange();
-                                var selection = window.getSelection();
-                                function getTextNodeAtOffset(root, offset) {{
-                                    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
-                                    var currentNode;
-                                    var currentOffset = 0;
-                                    while (currentNode = walker.nextNode()) {{
-                                        var nodeLength = currentNode.textContent.length;
-                                        if (currentOffset + nodeLength >= offset) {{
-                                            return {{ node: currentNode, offset: offset - currentOffset }};
-                                        }}
-                                        currentOffset += nodeLength;
-                                    }}
-                                    return null;
-                                }}
-                                var startInfo = getTextNodeAtOffset(document.body, {offsetInPage});
-                                var endInfo = getTextNodeAtOffset(document.body, {offsetInPage + lengthInPage});
-                                if (startInfo && endInfo) {{
-                                    range.setStart(startInfo.node, startInfo.offset);
-                                    range.setEnd(endInfo.node, endInfo.offset);
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);
-                                }}
-                            ");
-                            break;
-                        }
-                        cumulativeLength += pageLength;
-                    }
+                    await GoToPage(Math.Min(pageNo, _pages.Count - 1));
+                    await SelectTextAtOffsetAsync(offset, endOffset);
                 }
             }
             else
@@ -255,9 +222,7 @@ namespace Shinobu.Pages
                 {
                     _filePath = sessionFilePath;
                     await LoadBook();
-                    _currentPage = Math.Min(sessionPage, _pages.Count - 1);
-                    OnPropertyChanged();
-                    await DisplayCurrentPage();
+                    await GoToPage(Math.Min(sessionPage, _pages.Count - 1));
                 }
             }
 
@@ -268,13 +233,41 @@ namespace Shinobu.Pages
 
         }
 
+        private async Task SelectTextAtOffsetAsync(int offset, int length)
+        {
+            await ReaderWebView.ExecuteScriptAsync($@"
+                var range = document.createRange();
+                var selection = window.getSelection();
+                function getTextNodeAtOffset(root, offset) {{
+                    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                    var currentNode;
+                    var currentOffset = 0;
+                    while (currentNode = walker.nextNode()) {{
+                        var nodeLength = currentNode.textContent.length;
+                        if (currentOffset + nodeLength >= offset) {{
+                            return {{ node: currentNode, offset: offset - currentOffset }};
+                        }}
+                        currentOffset += nodeLength;
+                    }}
+                    return null;
+                }}
+                var startInfo = getTextNodeAtOffset(document.body, {offset});
+                var endInfo = getTextNodeAtOffset(document.body, {offset + length});
+                if (startInfo && endInfo) {{
+                    range.setStart(startInfo.node, startInfo.offset);
+                    range.setEnd(endInfo.node, endInfo.offset);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }}");
+        }
+
         private async Task<bool> CheckFileExists(string path)
         {
             if (!File.Exists(path))
             {
                 ReaderSessionManager.ClearSession();
                 MessageDialog info = new("The file was not found. It may have been moved or deleted.", "File Not Found");
-                _ = await info.ShowAsync();
+                await info.ShowAsync();
                 return false;
             }
 
@@ -295,145 +288,178 @@ namespace Shinobu.Pages
         private async Task LoadBook()
         {
             if (!await CheckFileExists(_filePath)) { return; }
-            _bookContent = await ContentParserFactory.GetParser(Path.GetExtension(_filePath)).ParseContentAsync(_filePath);
-            string content = _bookContent.TextContent;
 
-            double fontSize = ReaderFontSize;
-            double lineHeight = LineHeight;
-            double pageMargin = ReaderMargin;
-            double webViewWidth = ReaderWebView.ActualWidth - (2 * pageMargin);
-            double webViewHeight = ReaderWebView.ActualHeight - (2 * pageMargin);
+            _bookContent = await ContentParserFactory
+                .GetParser(Path.GetExtension(_filePath))
+                .ParseContentAsync(_filePath);
 
-            double avgCharWidth = fontSize * 0.79;
-            double avgLineHeight = (fontSize * lineHeight) + fontSize;
-            int navHeight = 65;
+            _pagesLoaded = new TaskCompletionSource();
 
-            int charsPerLineApprox = (int)((webViewWidth - (IsVerticalText ? navHeight : 0)) / avgCharWidth);
-            int linesPerPageApprox = (int)((webViewHeight - navHeight) / avgLineHeight);
-
-            int defaultTgtPageChrs = charsPerLineApprox * linesPerPageApprox;
-
-            _pages.Clear();
-            int offset = 0;
-            while (offset < content.Length)
-            {
-                int defaultTgt = defaultTgtPageChrs;
-                int end = Math.Min(offset + defaultTgt, content.Length);
-                string potentialPage = content[offset..end];
-                List<ImageContent> imagesInPotential = _bookContent.Images.Where(img => img.Offset >= offset && img.Offset < end).ToList();
-                double imgSpacePage = 0;
-                foreach (var img in imagesInPotential)
-                {
-                    imgSpacePage += IsVerticalText ? img.Width : img.Height;
-                }
-                double effHeight = webViewHeight - imgSpacePage;
-                int adjLPP = (int)((effHeight - navHeight) / avgLineHeight) - 1 - imagesInPotential.Count;
-                int actualTarget = charsPerLineApprox * adjLPP;
-                if (potentialPage.Length <= actualTarget)
-                {
-                    _pages.Add(potentialPage);
-                    offset = end;
-                }
-                else
-                {
-                    string page = potentialPage[..actualTarget];
-                    _pages.Add(page);
-                    offset += actualTarget;
-                }
-            }
-            _currentPage = Math.Min(_currentPage, _pages.Count - 1);
-            OnPropertyChanged();
-            await DisplayCurrentPage();
+            string html = await BuildFullHtml();
+            ReaderWebView.NavigateToString(html);
         }
 
-        private async Task DisplayCurrentPage()
+        private async Task<string> BuildFullHtml()
         {
-            if (_pages.Count == 0) return;
-
-            string text = _pages[_currentPage];
-            int pageStart = 0;
-            for (int i = 0; i < _currentPage; i++) pageStart += _pages[i].Length;
-            int pageEnd = pageStart + text.Length;
-            List<ImageContent> imagesInPage = _bookContent.Images.Where(img => img.Offset >= pageStart && img.Offset < pageEnd).OrderByDescending(img => img.Offset).ToList();
-            StringBuilder sb = new(text);
-            foreach (var img in imagesInPage)
-            {
-                int pos = img.Offset - pageStart;
-                string initbr = pos > 0 && sb[pos - 1] != '\n' ? "<br/><br/>" : string.Empty;
-                string imgTag = $"{initbr}<img src=\"data:image/png;base64,{img.Base64Data}\" width=\"{img.Width}\" height=\"{img.Height}\" style=\"max-width:100%; height:auto;\" /><br/><br/>";
-                sb.Insert(pos, imgTag);
-            }
-            string pageTextWithImages = sb.ToString();
-            string furiganaText = await GenerateFurigana(pageTextWithImages);
+            string textWithImages = InjectImages(_bookContent.TextContent);
+            string furiganaHtml = await _furiganaGenerator.GenerateHtmlFuriganaAsync(textWithImages, _userJlptLevel);
 
             double fontSize = _fontSize;
             double lineHeight = _lineHeight;
             string fontFamily = _readerFont.Source;
             string backgroundColor = "#FFF";
-            string shadowColor = "#EEEEEEFF";
             string textColor = "#000";
+            double webViewWidth = ReaderWebView.ActualWidth;
+            double webViewHeight = ReaderWebView.ActualHeight;
 
             Color accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
             string accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
+
             if (_theme == "Dark" || (_theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
             {
                 backgroundColor = "#000";
-                shadowColor = "#151515FF";
                 textColor = "#fff";
             }
-            string gradientFormat = $"radial-gradient(circle, {backgroundColor} 0%, {shadowColor} 100%)";
 
-            string bodyStyle = $"background: {gradientFormat}; color: {textColor}; font-size: {fontSize}px; line-height: {lineHeight * fontSize}px; font-family: {fontFamily}; padding: {_pageMargin}px; overflow: hidden; word-wrap: break-word;";
+            string bodyStyle = $@"
+                background-color: {backgroundColor};
+                color: {textColor}; 
+                font-size: {fontSize}px; 
+                line-height: {lineHeight * fontSize}px; 
+                font-family: {fontFamily}; 
+                overflow: hidden; 
+                padding: 0;
+                margin: 0;
+                word-wrap: break-word;";
+
+            string pagerStyle = $@"
+                column-width: {webViewWidth}px;
+                max-height: {webViewHeight - (_isVerticalText ? 150 : 120)}px;
+                box-sizing: border-box;
+                text-align: justify;
+                position: relative;
+                column-gap: 0px;
+                padding: 0px;
+                margin: 0px;
+                ";
             if (_isVerticalText)
             {
-                bodyStyle += " writing-mode: vertical-rl; text-orientation: mixed; padding-bottom: 50px;";
+                pagerStyle += "writing-mode: vertical-rl; text-orientation: mixed;";
             }
 
-            furiganaText = furiganaText.Replace("\n", "<br/>");
-
-            string html = $@"
-                <html>
-                <head>
+            return $@"
+                    <html>
+                    <head>
                     <style>
-                        body {{ {bodyStyle} }}
-                        rt {{user-select: none; pointer-events: none;}}
-                        ::selection {{ 
+                    body {{ {bodyStyle} }}
+                    #pager {{
+                        {pagerStyle}
+                    }}
+                    rt {{
+                        user-select: none;
+                        pointer-events: none;
+                    }}
+                    ::selection {{ 
                             background: {accentHex};
                             box-shadow: inset 0 0 12px rgba(255, 190, 40, 0.35);
                             text-shadow: 0 0 5px rgba(255, 220, 60, 0.6);
                         }}
                     </style>
-                </head>
-                <body>
-                    {furiganaText}
-                </body>
-                </html>";
-            ReaderWebView.NavigateToString(html);
+                    </head>
+                    <body>
+                    <div id='pager'>
+                    {furiganaHtml.Replace("\n", "<br/>")}
+                    </div>
+
+                    <script>
+                    function paginate() {{
+                        const pageWidth = document.documentElement.clientWidth;
+                        const totalPages = Math.ceil(pager.scrollWidth / pageWidth);
+                        const lengths = new Array(totalPages).fill(0);
+                        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                        let node;
+                        while (node = walker.nextNode()) {{
+                            const range = document.createRange();
+                            range.selectNodeContents(node);
+                            const rect = range.getBoundingClientRect();
+                            const page = Math.floor(rect.left / pageWidth);
+                            if (page >= 0 && page < totalPages) {{
+                                lengths[page] += node.textContent.length;
+                            }}
+                        }}
+                        window.chrome.webview.postMessage('pages:' + JSON.stringify(lengths));
+                    }}
+
+                    function goToPage(p) {{
+                        const pageWidth = document.documentElement.clientWidth;
+                        window.scrollTo(p * pageWidth, 0);
+                    }}
+
+                    document.addEventListener('mouseup', () => {{
+                        const sel = window.getSelection();
+                        if (!sel.rangeCount) return;
+
+                        const range = sel.getRangeAt(0).cloneContents();
+                        range.querySelectorAll('rt').forEach(e => e.remove());
+
+                        const text = range.textContent.trim();
+                        if (!text) return;
+
+                        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                        let offset = 0;
+                        let node;
+                        while (node = walker.nextNode()) {{
+                            if (node === sel.anchorNode) {{
+                                offset += sel.anchorOffset;
+                                break;
+                            }}
+                            offset += node.textContent.length;
+                        }}
+
+                        window.chrome.webview.postMessage('selected:' + offset + ':' + text);
+                    }});
+
+                    window.addEventListener('resize', paginate);
+                    paginate();
+                    </script>
+                    </body>
+                    </html>";
         }
 
-        private async Task<string> GenerateFurigana(string text)
+        private string InjectImages(string text)
         {
-            return await _furiganaGenerator.GenerateHtmlFuriganaAsync(text, UserJlptLevel);
+            var sb = new StringBuilder(text);
+
+            foreach (var img in _bookContent.Images.OrderByDescending(i => i.Offset))
+            {
+                sb.Insert(img.Offset,
+                    $"<img src='data:image/png;base64,{img.Base64Data}' style='max-width:100%;display:block;margin:1em auto;'/>");
+            }
+
+            return sb.ToString();
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_currentPage > 0)
+            if (CanGoPrev)
             {
-                _currentPage--;
-                OnPropertyChanged();
-                _ = DisplayCurrentPage();
+                _ = GoToPage(_currentPage - 1);
             }
         }
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_currentPage < _pages.Count - 1)
+            if (CanGoNext)
             {
-                _currentPage++;
-                OnPropertyChanged();
-                _ = DisplayCurrentPage();
+                _ = GoToPage(_currentPage + 1);
             }
+        }
+
+        private async Task GoToPage(int page)
+        {
+            _currentPage = page;
+            OnPropertyChanged();
+            await ReaderWebView.ExecuteScriptAsync($"goToPage({page});");
         }
 
         private async void PageOptionsButton_Click(object sender, RoutedEventArgs e)
@@ -450,26 +476,39 @@ namespace Shinobu.Pages
 
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
-            string message = args.TryGetWebMessageAsString();
-            if (message.StartsWith("selected:"))
+            string msg = args.TryGetWebMessageAsString();
+
+            if (msg.StartsWith("pages:"))
             {
-                string[] parts = message["selected:".Length..].Split(':', 2);
+                string lengthsJson = msg[6..];
+                var lengths = JsonSerializer.Deserialize<List<int>>(lengthsJson);
+                while (lengths != null && lengths.Count > 0 && lengths[^1] == 0)
+                {
+                    lengths.RemoveAt(lengths.Count - 1);
+                }
+                _pages = lengths ?? [];
+                _currentPage = Math.Min(_currentPage, Math.Max(_pages.Count - 1,0));
+                OnPropertyChanged();
+                _pagesLoaded.TrySetResult();
+            }
+            else if (msg.StartsWith("selected:"))
+            {
+                string[] parts = msg["selected:".Length..].Split(':', 2);
                 if (parts.Length == 2 && int.TryParse(parts[0], out int start))
                 {
-                    string selectedText = parts[1];
-                    await ShowSelectedTextPopup(selectedText, start);
+                    await ShowSelectedTextPopup(parts[1], start);
                 }
             }
         }
 
         private async Task ShowSelectedTextPopup(string text, int start)
         {
-            if (_isDialogShowing) return;
-            _isDialogShowing = true;
-            for (int i = 0; i < _currentPage; i++)
+            if (_isDialogShowing)
             {
-                start += _pages[i].Length;
+                return;
             }
+
+            _isDialogShowing = true;
             SelectionDialog dialog = new(start, text.Length, text, _currentPage, _filePath);
             Grid overlay = new()
             {
@@ -479,8 +518,8 @@ namespace Shinobu.Pages
             };
             void closeDialog()
             {
-                (this.Content as Panel)?.Children.Remove(overlay);
-                (this.Content as Panel)?.Children.Remove(dialog);
+                (Content as Panel)?.Children.Remove(overlay);
+                (Content as Panel)?.Children.Remove(dialog);
                 _isDialogShowing = false;
                 _ = ReaderWebView.ExecuteScriptAsync("window.getSelection().removeAllRanges();");
             }

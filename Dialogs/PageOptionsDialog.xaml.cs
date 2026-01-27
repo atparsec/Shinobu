@@ -55,9 +55,9 @@ namespace Shinobu.Dialogs
 
             PageMarginComboBox.SelectedIndex = _readerPage.ReaderMargin switch
             {
-                10 => 0,
-                20 => 1,
-                30 => 2,
+                20 => 0,
+                30 => 1,
+                60 => 2,
                 _ => 1
             };
         }
@@ -87,10 +87,10 @@ namespace Shinobu.Dialogs
             if (!_isLoaded) return;
             _readerPage.ReaderMargin = PageMarginComboBox.SelectedIndex switch
             {
-                0 => 10,
-                1 => 20,
-                2 => 30,
-                _ => 20
+                0 => 20,
+                1 => 30,
+                2 => 60,
+                _ => 30
             };
         }
 

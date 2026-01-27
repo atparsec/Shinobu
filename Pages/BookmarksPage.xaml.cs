@@ -108,7 +108,7 @@ public sealed partial class BookmarksPage : Page, ISearchProvider, INotifyProper
         {
             if (App.MainWindowInstance is MainWindow)
             {
-                Frame.Navigate(typeof(ReaderPage), ($"{bookmark.FilePath};{bookmark.PageNumber};{bookmark.Offset.Start};{bookmark.Offset.End}"));
+                Frame.Navigate(typeof(ReaderPage), ($"{bookmark.FilePath};{bookmark.PageNumber};{bookmark.Offset.Start};{bookmark.Offset.End};{bookmark.PageNumber - 1}"));
             }
         }
     }
