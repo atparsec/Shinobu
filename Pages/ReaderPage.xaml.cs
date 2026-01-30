@@ -9,7 +9,6 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -115,7 +114,6 @@ namespace Shinobu.Pages
                 {
                     _pageMargin = value;
                     _settings.Values["PageMargin"] = value;
-                    ReaderWebView.Margin = new Thickness(value);
                     _ = LoadBook();
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
@@ -147,7 +145,6 @@ namespace Shinobu.Pages
             _readerFont = _settings.Values.TryGetValue("FontFamily", out object? ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
             _pageMargin = _settings.Values.TryGetValue("PageMargin", out object? pm) && pm is double pmd ? pmd : 30.0;
             _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "Dark";
-            ReaderWebView.Margin = new Thickness(_pageMargin);
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -155,7 +152,6 @@ namespace Shinobu.Pages
         private async void ReaderWebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
         {
             await sender.ExecuteScriptAsync($@"
-                goToPage({_currentPage});
                 if (!window.__selectionListenerAttached) {{
                     document.addEventListener('mouseup', function () {{
                         var selection = window.getSelection();
@@ -198,6 +194,9 @@ namespace Shinobu.Pages
             _ = anim?.TryStart(ReaderWebView);
 
             await ReaderWebView.EnsureCoreWebView2Async();
+            ReaderWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            ReaderWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+
             if (e.Parameter is string path)
             {
                 string[] parts = path.Split(';');
@@ -327,27 +326,42 @@ namespace Shinobu.Pages
                 font-size: {fontSize}px; 
                 line-height: {lineHeight * fontSize}px; 
                 font-family: {fontFamily}; 
-                overflow: hidden; 
+                overflow: hidden;
                 padding: 0;
                 margin: 0;
-                word-wrap: break-word;";
+                overflow-wrap: normal;
+                ";
 
             string pagerStyle = $@"
                 column-width: {webViewWidth}px;
-                max-height: {webViewHeight - (_isVerticalText ? 150 : 120)}px;
-                box-sizing: border-box;
                 text-align: justify;
-                position: relative;
-                column-gap: 0px;
-                padding: 0px;
-                margin: 0px;
-                ";
-            if (_isVerticalText)
+                padding: {ReaderMargin}px;
+                text-combine-upright: digits 2;
+                hanging-punctuation: allow-end;
+                line-break: strict;
+            ";
+            if (IsVerticalText)
             {
-                pagerStyle += "writing-mode: vertical-rl; text-orientation: mixed;";
+                pagerStyle += $@"
+                    
+                    width: calc(100% - {ReaderMargin * 2}px);
+                    column-gap: {ReaderMargin*2 +40}px;
+                    margin-bottom: 40px;
+                    writing-mode: vertical-rl;
+                    text-orientation: mixed;
+                ";
+            } else
+            {
+                pagerStyle += $@"
+                    max-height: {webViewHeight - 120}px;
+                    column-gap: {ReaderMargin*2}px;
+                    box-sizing: border-box;
+                    position: relative; 
+                    margin: 0px;
+                ";
             }
 
-            return $@"
+                return $@"
                     <html>
                     <head>
                     <style>
@@ -373,16 +387,32 @@ namespace Shinobu.Pages
 
                     <script>
                     function paginate() {{
-                        const pageWidth = document.documentElement.clientWidth;
-                        const totalPages = Math.ceil(pager.scrollWidth / pageWidth);
-                        const lengths = new Array(totalPages).fill(0);
+                        const isVertical = {_isVerticalText.ToString().ToLower()};
+                        let totalPages;
+                        let lengths;
+                        if (isVertical) {{
+                            const pageHeight = document.documentElement.clientHeight;
+                            totalPages = Math.ceil(pager.scrollHeight / pageHeight);
+                            lengths = new Array(totalPages).fill(0);
+                        }} else {{
+                            const pageWidth = document.documentElement.clientWidth;
+                            totalPages = Math.ceil(pager.scrollWidth / pageWidth);
+                            lengths = new Array(totalPages).fill(0);
+                        }}
                         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                         let node;
                         while (node = walker.nextNode()) {{
                             const range = document.createRange();
                             range.selectNodeContents(node);
                             const rect = range.getBoundingClientRect();
-                            const page = Math.floor(rect.left / pageWidth);
+                            let page;
+                            if (isVertical) {{
+                                const pageHeight = document.documentElement.clientHeight;
+                                page = Math.floor(rect.top / pageHeight);
+                            }} else {{
+                                const pageWidth = document.documentElement.clientWidth;
+                                page = Math.floor(rect.left / pageWidth);
+                            }}
                             if (page >= 0 && page < totalPages) {{
                                 lengths[page] += node.textContent.length;
                             }}
@@ -391,6 +421,11 @@ namespace Shinobu.Pages
                     }}
 
                     function goToPage(p) {{
+                        if ({_isVerticalText.ToString().ToLower()}) {{
+                            const pageHeight = document.documentElement.clientHeight;
+                            window.scrollTo(0, p * (pageHeight+{ReaderMargin-30}));
+                            return;
+                        }}
                         const pageWidth = document.documentElement.clientWidth;
                         window.scrollTo(p * pageWidth, 0);
                     }}
@@ -487,9 +522,10 @@ namespace Shinobu.Pages
                     lengths.RemoveAt(lengths.Count - 1);
                 }
                 _pages = lengths ?? [];
-                _currentPage = Math.Min(_currentPage, Math.Max(_pages.Count - 1,0));
+                _currentPage = Math.Min(_currentPage, Math.Max(_pages.Count - 1, 0));
                 OnPropertyChanged();
                 _pagesLoaded.TrySetResult();
+                await GoToPage(_currentPage);
             }
             else if (msg.StartsWith("selected:"))
             {
