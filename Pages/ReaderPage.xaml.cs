@@ -39,7 +39,7 @@ namespace Shinobu.Pages
         private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
         private BookContent _bookContent = new();
 
-        private TaskCompletionSource _pagesLoaded;
+        private TaskCompletionSource? _pagesLoaded;
         public bool CanGoPrev => _currentPage > 0;
         public bool CanGoNext => _currentPage < _pages.Count - 1;
         public string PageText => $"{_currentPage + 1} / {_pages.Count}";
@@ -69,7 +69,7 @@ namespace Shinobu.Pages
                 {
                     _fontSize = value;
                     _settings.Values["FontSize"] = value;
-                    _ = LoadBook();
+                    _ = RenderBook();
                     OnPropertyChanged(nameof(ReaderFontSize));
                 }
             }
@@ -84,7 +84,7 @@ namespace Shinobu.Pages
                 {
                     _lineHeight = value;
                     _settings.Values["LineHeight"] = value;
-                    _ = LoadBook();
+                    _ = RenderBook();
                     OnPropertyChanged(nameof(LineHeight));
                 }
             }
@@ -99,7 +99,7 @@ namespace Shinobu.Pages
                 {
                     _readerFont = value;
                     _settings.Values["FontFamily"] = value.Source;
-                    _ = LoadBook();
+                    _ = RenderBook();
                     OnPropertyChanged(nameof(ReaderFont));
                 }
             }
@@ -114,7 +114,7 @@ namespace Shinobu.Pages
                 {
                     _pageMargin = value;
                     _settings.Values["PageMargin"] = value;
-                    _ = LoadBook();
+                    _ = RenderBook();
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
             }
@@ -129,7 +129,7 @@ namespace Shinobu.Pages
                 {
                     _userJlptLevel = value;
                     _settings.Values["JlptLevel"] = (int)value;
-                    _ = LoadBook();
+                    _ = RenderBook();
                     OnPropertyChanged(nameof(UserJlptLevel));
                 }
             }
@@ -202,7 +202,7 @@ namespace Shinobu.Pages
                 string[] parts = path.Split(';');
                 _filePath = parts[0];
                 await LoadBook();
-                await _pagesLoaded.Task;
+                await _pagesLoaded!.Task;
 
                 if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
                 {
@@ -293,7 +293,11 @@ namespace Shinobu.Pages
                 .ParseContentAsync(_filePath);
 
             _pagesLoaded = new TaskCompletionSource();
+            await RenderBook();
+        }
 
+        private async Task RenderBook()
+        {
             string html = await BuildFullHtml();
             ReaderWebView.NavigateToString(html);
         }
@@ -524,7 +528,7 @@ namespace Shinobu.Pages
                 _pages = lengths ?? [];
                 _currentPage = Math.Min(_currentPage, Math.Max(_pages.Count - 1, 0));
                 OnPropertyChanged();
-                _pagesLoaded.TrySetResult();
+                _pagesLoaded?.TrySetResult();
                 await GoToPage(_currentPage);
             }
             else if (msg.StartsWith("selected:"))
