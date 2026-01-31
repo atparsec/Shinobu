@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
 
@@ -10,10 +8,12 @@ namespace Shinobu.Helpers
 {
     public class ImageContent
     {
+        public int Id { get; set; }
         public int Offset { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }
-        public string Base64Data { get; set; } = string.Empty;
+        public byte[] ImageData { get; set; } = Array.Empty<byte>();
+        public string Extension { get; set; } = ".jpg";
     }
 
     public class BookContent
@@ -55,6 +55,7 @@ namespace Shinobu.Helpers
                 }
                 var images = new List<ImageContent>();
                 int offset = 0;
+                int imgId = 0;
                 foreach (var page in document.GetPages())
                 {
                     foreach (var image in page.GetImages())
@@ -68,13 +69,14 @@ namespace Shinobu.Helpers
                         {
                             imageBytes = image.RawMemory.ToArray();
                         }
-                        string base64Data = Convert.ToBase64String(imageBytes);
+
                         images.Add(new ImageContent
                         {
+                            Id = imgId++,
                             Offset = offset,
                             Width = image.WidthInSamples,
                             Height = image.HeightInSamples,
-                            Base64Data = base64Data
+                            ImageData = imageBytes
                         });
                     }
                     offset += page.Text.Length;

@@ -13,6 +13,8 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" DefaultBackgroundColor="Transparent" />
 
+        <ProgressRing x:Name="LoadingRing" IsActive="True" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,20" Spacing="20"
                     Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" CornerRadius="15">
             <Button x:Name="PrevButton" Content="Previous" Click="PrevButton_Click" IsEnabled="{x:Bind CanGoPrev, Mode=OneWay}" />

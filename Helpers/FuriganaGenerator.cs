@@ -125,12 +125,12 @@ namespace Shinobu.Helpers
                         // Approximation: reading for kanji part is total reading minus okurigana reading
                         string kanjiReading = hira[..^okuriPart.Length];
 
-                        sb.Append($"<ruby>{kanjiPart}<rt class=\"furigana\" aria-hidden=\"true\">{kanjiReading}</rt></ruby>");
+                        sb.Append($"<ruby>{kanjiPart}<rt class=\"fg\" aria-hidden=\"true\">{kanjiReading}</rt></ruby>");
                         sb.Append(okuriPart);
                     }
                     else
                     {
-                        sb.Append($"<ruby>{surface}<rt class=\"furigana\" aria-hidden=\"true\">{hira}</rt></ruby>");
+                        sb.Append($"<ruby>{surface}<rt class=\"fg\" aria-hidden=\"true\">{hira}</rt></ruby>");
                     }
                 }
                 else

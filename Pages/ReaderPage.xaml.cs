@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -40,6 +41,8 @@ namespace Shinobu.Pages
         private BookContent _bookContent = new();
         private ReaderThemeManager _themeManager = new();
         private string _currentThemeName;
+        private readonly Dictionary<string, BookContent> _contentCache = [];
+        private string? _currentFileHash;
 
         private TaskCompletionSource? _pagesLoaded;
         public bool CanGoPrev => _currentPage > 0;
@@ -56,7 +59,10 @@ namespace Shinobu.Pages
                 {
                     _isVerticalText = value;
                     _settings.Values["IsVerticalText"] = value;
-                    _ = LoadBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(IsVerticalText));
                 }
             }
@@ -71,7 +77,10 @@ namespace Shinobu.Pages
                 {
                     _fontSize = value;
                     _settings.Values["FontSize"] = value;
-                    _ = RenderBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(ReaderFontSize));
                 }
             }
@@ -86,7 +95,10 @@ namespace Shinobu.Pages
                 {
                     _lineHeight = value;
                     _settings.Values["LineHeight"] = value;
-                    _ = RenderBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(LineHeight));
                 }
             }
@@ -101,7 +113,10 @@ namespace Shinobu.Pages
                 {
                     _readerFont = value;
                     _settings.Values["FontFamily"] = value.Source;
-                    _ = RenderBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(ReaderFont));
                 }
             }
@@ -116,7 +131,10 @@ namespace Shinobu.Pages
                 {
                     _pageMargin = value;
                     _settings.Values["PageMargin"] = value;
-                    _ = RenderBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
             }
@@ -131,7 +149,10 @@ namespace Shinobu.Pages
                 {
                     _userJlptLevel = value;
                     _settings.Values["JlptLevel"] = (int)value;
-                    _ = RenderBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(UserJlptLevel));
                 }
             }
@@ -146,7 +167,10 @@ namespace Shinobu.Pages
                 {
                     _currentThemeName = value;
                     _settings.Values["ReaderTheme"] = value;
-                    _ = RenderBook();
+                    if (_currentFileHash != null)
+                    {
+                        _ = RenderBook(_currentFileHash);
+                    }
                     OnPropertyChanged(nameof(ReaderThemeName));
                 }
             }
@@ -200,7 +224,7 @@ namespace Shinobu.Pages
                             var range = selection.getRangeAt(0);
                             var fragment = range.cloneContents();
 
-                            fragment.querySelectorAll('.furigana').forEach(el => el.remove());
+                            fragment.querySelectorAll('.fg').forEach(el => el.remove());
 
                             var selectedText = fragment.textContent;
                             if (selectedText.trim()) {{
@@ -237,7 +261,9 @@ namespace Shinobu.Pages
 
             await ReaderWebView.EnsureCoreWebView2Async();
             ReaderWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-            ReaderWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+            ReaderWebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+
+            LoadingRing.Visibility = Visibility.Visible;
 
             if (e.Parameter is string path)
             {
@@ -245,6 +271,8 @@ namespace Shinobu.Pages
                 _filePath = parts[0];
                 await LoadBook();
                 await _pagesLoaded!.Task;
+
+                LoadingRing.Visibility = Visibility.Collapsed;
 
                 if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
                 {
@@ -265,6 +293,8 @@ namespace Shinobu.Pages
                     await LoadBook();
                     await GoToPage(sessionPage);
                 }
+
+                LoadingRing.Visibility = Visibility.Collapsed;
             }
 
             if (App.MainWindowInstance is MainWindow mainWindow)
@@ -330,93 +360,107 @@ namespace Shinobu.Pages
         {
             if (!await CheckFileExists(_filePath)) { return; }
 
-            _bookContent = await ContentParserFactory
-                .GetParser(Path.GetExtension(_filePath))
-                .ParseContentAsync(_filePath);
-
-            _pagesLoaded = new TaskCompletionSource();
-            await RenderBook();
-        }
-
-        private async Task RenderBook()
-        {
-            string html = await BuildFullHtml();
-            ReaderWebView.NavigateToString(html);
-        }
-
-        private async Task<string> BuildFullHtml()
-        {
-            string textWithImages = InjectImages(_bookContent.TextContent);
-            string furiganaHtml = await _furiganaGenerator.GenerateHtmlFuriganaAsync(textWithImages, _userJlptLevel);
-
-            double fontSize = _fontSize;
-            double lineHeight = _lineHeight;
-            string fontFamily = _readerFont.Source;
-            BookTheme currentTheme = CurrentTheme;
-            string backgroundColor = currentTheme.Background;
-            string textColor = currentTheme.Foreground;
-            Color accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
-            string accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
-
-            string bodyStyle = $@"
-                background-color: {backgroundColor};
-                color: {textColor}; 
-                font-size: {fontSize}px; 
-                line-height: {lineHeight * fontSize}px; 
-                font-family: {fontFamily}; 
-                overflow: hidden;
-                padding: 0;
-                margin: 0;
-                overflow-wrap: normal;
-                ";
-
-            string pagerStyle = $@"
-                column-width: {ReaderWebView.ActualWidth}px;
-                text-align: justify;
-                padding: {ReaderMargin}px;
-                text-combine-upright: digits 2;
-                hanging-punctuation: allow-end;
-                line-break: strict;
-            ";
-            if (IsVerticalText)
+            string fileHash = await ComputeFileHash(_filePath);
+            _currentFileHash = fileHash;
+            if (!_contentCache.TryGetValue(fileHash, out _bookContent))
             {
-                pagerStyle += $@"
-                    
-                    width: calc(100% - {ReaderMargin * 2}px);
-                    column-gap: {ReaderMargin*2 +40}px;
-                    margin-bottom: 40px;
-                    writing-mode: vertical-rl;
-                    text-orientation: mixed;
-                ";
-            } else
-            {
-                pagerStyle += $@"
-                    max-height: {ReaderWebView.ActualHeight - 120}px;
-                    column-gap: {ReaderMargin*2}px;
-                    box-sizing: border-box;
-                    position: relative; 
-                    margin: 0px;
-                ";
+                _bookContent = await ContentParserFactory
+                    .GetParser(Path.GetExtension(_filePath))
+                    .ParseContentAsync(_filePath);
+                _contentCache[fileHash] = _bookContent;
+
+                string bookDir = Path.Combine(Path.GetTempPath(), "shinobu", "books", fileHash);
+                Directory.CreateDirectory(bookDir);
+                string imagesDir = Path.Combine(bookDir, "images");
+                Directory.CreateDirectory(imagesDir);
+                foreach (var img in _bookContent.Images)
+                {
+                    byte[] data = img.ImageData;
+                    string imgPath = Path.Combine(imagesDir, $"{img.Id}{img.Extension}");
+                    await File.WriteAllBytesAsync(imgPath, data);
+                    img.ImageData = [];
+                }
             }
 
-                return $@"
+            _pagesLoaded = new TaskCompletionSource();
+            await RenderBook(fileHash);
+        }
+
+        private async Task RenderBook(string fileHash)
+        {
+            string htmlSettings = $"{_userJlptLevel}";
+            string htmlHash = ComputeSettingsHash(htmlSettings);
+            string bookDir = Path.Combine(Path.GetTempPath(), "shinobu", "books", fileHash);
+            string htmlFile = Path.Combine(bookDir, $"{fileHash}_{htmlHash}.html");
+            string cssFile = Path.Combine(Path.GetTempPath(), "shinobu", "shinobu_styles.css");
+
+            string cssContent = BuildCss();
+            Directory.CreateDirectory(Path.GetDirectoryName(cssFile)!);
+            await File.WriteAllTextAsync(cssFile, cssContent);
+
+            if (!File.Exists(htmlFile))
+            {
+                string htmlContent = await BuildHtml();
+                await File.WriteAllTextAsync(htmlFile, htmlContent);
+            }
+
+            Uri htmlUri = new Uri(htmlFile);
+            if (ReaderWebView.Source == htmlUri)
+            {
+                ReaderWebView.CoreWebView2.Reload();
+            }
+            else
+            {
+                ReaderWebView.CoreWebView2.Navigate(htmlFile);
+            }
+        }
+
+        private string HTMLError(string message)
+        {
+
+            return $@"
+                <div style='
+                position: fixed;
+                top: 0; left: 0; right: 0;
+                z-index: 10000;
+                background: #ef4444 !important;
+                color: white !important;
+                padding: 16px;
+                font-family: system-ui, sans-serif;
+                font-size: 15px;
+                font-weight: 500;
+                text-align: center;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                border: 2px solid #dc2626;'>
+                <strong>{message}</strong>
+            </div><br/>";
+        }
+
+        private async Task<string> BuildHtml()
+        {
+            string textWithImages;
+            try
+            {
+                textWithImages = InjectImages(_bookContent.TextContent);
+            }
+            catch (Exception ex)
+            {
+                textWithImages = HTMLError("Could not inject images " + ex.Message) + _bookContent.TextContent;
+            }
+            string furiganaHtml;
+            try
+            {
+                furiganaHtml = await _furiganaGenerator.GenerateHtmlFuriganaAsync(textWithImages, _userJlptLevel);
+            }
+            catch (Exception ex)
+            {
+                furiganaHtml = HTMLError("Could not generate furigana " + ex.Message) + textWithImages;
+            }
+
+            return $@"
                     <html>
                     <head>
-                    <style>
-                    body {{ {bodyStyle} }}
-                    #pager {{
-                        {pagerStyle}
-                    }}
-                    rt {{
-                        user-select: none;
-                        pointer-events: none;
-                    }}
-                    ::selection {{ 
-                            background: {accentHex};
-                            box-shadow: inset 0 0 12px rgba(255, 190, 40, 0.35);
-                            text-shadow: 0 0 5px rgba(255, 220, 60, 0.6);
-                        }}
-                    </style>
+                    <link rel='stylesheet' href='../../shinobu_styles.css'>
                     </head>
                     <body>
                     <div id='pager'>
@@ -461,7 +505,7 @@ namespace Shinobu.Pages
                     function goToPage(p) {{
                         if ({_isVerticalText.ToString().ToLower()}) {{
                             const pageHeight = document.documentElement.clientHeight;
-                            window.scrollTo({{ top: p * (pageHeight+{ReaderMargin-30}), behavior: 'smooth' }});
+                            window.scrollTo({{ top: p * (pageHeight+{ReaderMargin - 30}), behavior: 'smooth' }});
                             return;
                         }}
                         const pageWidth = document.documentElement.clientWidth;
@@ -506,7 +550,7 @@ namespace Shinobu.Pages
             foreach (var img in _bookContent.Images.OrderByDescending(i => i.Offset))
             {
                 sb.Insert(img.Offset,
-                    $"<img src='data:image/png;base64,{img.Base64Data}' style='max-width:100%;display:block;margin:1em auto;'/>");
+                    $"<img src='images/{img.Id}{img.Extension}' style='max-width:100%;display:block;margin:1em auto;'/>");
             }
 
             return sb.ToString();
@@ -648,7 +692,7 @@ namespace Shinobu.Pages
                     {
                         fg = $"#{themeCreator.SelectedColor.R:X2}{themeCreator.SelectedColor.G:X2}{themeCreator.SelectedColor.B:X2}";
                     }
-                }      
+                }
 
                 if (!string.IsNullOrEmpty(bg) && !string.IsNullOrEmpty(fg))
                 {
@@ -674,6 +718,89 @@ namespace Shinobu.Pages
         private void OnPropertyChanged(string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private static async Task<string> ComputeFileHash(string filePath)
+        {
+            using var sha = SHA256.Create();
+            using var stream = File.OpenRead(filePath);
+            byte[] hash = await sha.ComputeHashAsync(stream);
+            return Convert.ToBase64String(hash).Replace("/", "_").Replace("+", "-");
+        }
+
+        private static string ComputeSettingsHash(string settings)
+        {
+            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(settings));
+            return Convert.ToBase64String(hash).Replace("/", "_").Replace("+", "-");
+        }
+
+        private string BuildCss()
+        {
+            double fontSize = _fontSize;
+            double lineHeight = _lineHeight;
+            string fontFamily = _readerFont.Source;
+            BookTheme currentTheme = CurrentTheme;
+            string backgroundColor = currentTheme.Background;
+            string textColor = currentTheme.Foreground;
+            Color accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+            string accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
+
+            string bodyStyle = $@"
+                background-color: {backgroundColor};
+                color: {textColor}; 
+                font-size: {fontSize}px; 
+                line-height: {lineHeight * fontSize}px; 
+                font-family: {fontFamily}; 
+                overflow: hidden;
+                padding: 0;
+                margin: 0;
+                overflow-wrap: normal;
+                ";
+
+            string pagerStyle = $@"
+                column-width: {ReaderWebView.ActualWidth}px;
+                text-align: justify;
+                padding: {ReaderMargin}px;
+                text-combine-upright: digits 2;
+                hanging-punctuation: allow-end;
+                line-break: strict;
+            ";
+            if (IsVerticalText)
+            {
+                pagerStyle += $@"
+                    
+                    width: calc(100% - {ReaderMargin * 2}px);
+                    column-gap: {ReaderMargin * 2 + 40}px;
+                    margin-bottom: 40px;
+                    writing-mode: vertical-rl;
+                    text-orientation: mixed;
+                ";
+            }
+            else
+            {
+                pagerStyle += $@"
+                    max-height: {ReaderWebView.ActualHeight - 120}px;
+                    column-gap: {ReaderMargin * 2}px;
+                    box-sizing: border-box;
+                    position: relative; 
+                    margin: 0px;
+                ";
+            }
+
+            return $@"
+                    body {{ {bodyStyle} }}
+                    #pager {{
+                        {pagerStyle}
+                    }}
+                    rt {{
+                        user-select: none;
+                        pointer-events: none;
+                    }}
+                    ::selection {{ 
+                            background: {accentHex};
+                            box-shadow: inset 0 0 12px rgba(255, 190, 40, 0.35);
+                            text-shadow: 0 0 5px rgba(255, 220, 60, 0.6);
+                        }}";
         }
     }
 }
