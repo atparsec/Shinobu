@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using UglyToad.PdfPig.Logging;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Popups;
@@ -38,6 +39,8 @@ namespace Shinobu.Pages
         private string _theme = "System";
         private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
         private BookContent _bookContent = new();
+        private ReaderThemeManager _themeManager = new();
+        private string _currentThemeName;
 
         private TaskCompletionSource? _pagesLoaded;
         public bool CanGoPrev => _currentPage > 0;
@@ -135,6 +138,37 @@ namespace Shinobu.Pages
             }
         }
 
+        public string ReaderThemeName
+        {
+            get => _currentThemeName;
+            set
+            {
+                if (_currentThemeName != value)
+                {
+                    _currentThemeName = value;
+                    _settings.Values["ReaderTheme"] = value;
+                    _ = RenderBook();
+                    OnPropertyChanged(nameof(ReaderThemeName));
+                }
+            }
+        }
+
+        private BookTheme CurrentTheme
+        {
+            get
+            {
+                if (_currentThemeName == "Default")
+                {
+                    bool isDark = _theme == "Dark" || (_theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark);
+                    return new BookTheme { Name = "Default", Background = isDark ? "#000" : "#FFF", Foreground = isDark ? "#FFF" : "#000" };
+                }
+                else
+                {
+                    return _themeManager.GetTheme(_currentThemeName) ?? _themeManager.GetTheme("Default") ?? _themeManager.Themes.FirstOrDefault() ?? new BookTheme();
+                }
+            }
+        }
+
         public ReaderPage()
         {
             InitializeComponent();
@@ -145,6 +179,13 @@ namespace Shinobu.Pages
             _readerFont = _settings.Values.TryGetValue("FontFamily", out object? ff) && ff is string ffs ? new FontFamily(ffs) : new FontFamily("Segoe UI");
             _pageMargin = _settings.Values.TryGetValue("PageMargin", out object? pm) && pm is double pmd ? pmd : 30.0;
             _theme = _settings.Values.TryGetValue("Theme", out object? t) && t is string themeStr ? themeStr : "Dark";
+            ElementTheme requestedTheme = _theme switch
+            {
+                "Light" => ElementTheme.Light,
+                "Dark" => ElementTheme.Dark,
+                _ => ElementTheme.Default
+            };
+            _currentThemeName = _settings.Values.TryGetValue("ReaderTheme", out object? rt) && rt is string rts ? rts : "Default";
             ReaderWebView.WebMessageReceived += OnWebMessageReceived;
             ReaderWebView.NavigationCompleted += ReaderWebView_NavigationCompleted;
         }
@@ -189,6 +230,8 @@ namespace Shinobu.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            await _themeManager.LoadAsync();
+
             ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
 
             _ = anim?.TryStart(ReaderWebView);
@@ -221,7 +264,7 @@ namespace Shinobu.Pages
                 {
                     _filePath = sessionFilePath;
                     await LoadBook();
-                    await GoToPage(Math.Min(sessionPage, _pages.Count - 1));
+                    await GoToPage(sessionPage);
                 }
             }
 
@@ -310,19 +353,11 @@ namespace Shinobu.Pages
             double fontSize = _fontSize;
             double lineHeight = _lineHeight;
             string fontFamily = _readerFont.Source;
-            string backgroundColor = "#FFF";
-            string textColor = "#000";
-            double webViewWidth = ReaderWebView.ActualWidth;
-            double webViewHeight = ReaderWebView.ActualHeight;
-
+            BookTheme currentTheme = CurrentTheme;
+            string backgroundColor = currentTheme.Background;
+            string textColor = currentTheme.Foreground;
             Color accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
             string accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}CC";
-
-            if (_theme == "Dark" || (_theme == "System" && Application.Current.RequestedTheme == ApplicationTheme.Dark))
-            {
-                backgroundColor = "#000";
-                textColor = "#fff";
-            }
 
             string bodyStyle = $@"
                 background-color: {backgroundColor};
@@ -337,7 +372,7 @@ namespace Shinobu.Pages
                 ";
 
             string pagerStyle = $@"
-                column-width: {webViewWidth}px;
+                column-width: {ReaderWebView.ActualWidth}px;
                 text-align: justify;
                 padding: {ReaderMargin}px;
                 text-combine-upright: digits 2;
@@ -357,7 +392,7 @@ namespace Shinobu.Pages
             } else
             {
                 pagerStyle += $@"
-                    max-height: {webViewHeight - 120}px;
+                    max-height: {ReaderWebView.ActualHeight - 120}px;
                     column-gap: {ReaderMargin*2}px;
                     box-sizing: border-box;
                     position: relative; 
@@ -501,18 +536,6 @@ namespace Shinobu.Pages
             await ReaderWebView.ExecuteScriptAsync($"goToPage({page});");
         }
 
-        private async void PageOptionsButton_Click(object sender, RoutedEventArgs e)
-        {
-            ContentDialog dialog = new()
-            {
-                Title = "Page Options",
-                Content = new PageOptionsDialog(this),
-                CloseButtonText = "Close",
-                XamlRoot = XamlRoot
-            };
-            await dialog.ShowAsync();
-        }
-
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
             string msg = args.TryGetWebMessageAsString();
@@ -569,6 +592,84 @@ namespace Shinobu.Pages
             (Content as Panel)?.Children.Add(dialog);
             dialog.HorizontalAlignment = HorizontalAlignment.Center;
             dialog.VerticalAlignment = VerticalAlignment.Center;
+        }
+
+        private async void PageOptionsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isDialogShowing)
+            {
+                return;
+            }
+            _isDialogShowing = true;
+            var pageOptionsDialog = new PageOptionsDialog(this);
+            Grid overlay = new()
+            {
+                Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            void closeDialog()
+            {
+                (Content as Panel)?.Children.Remove(overlay);
+                (Content as Panel)?.Children.Remove(pageOptionsDialog);
+                _isDialogShowing = false;
+                _ = ReaderWebView.ExecuteScriptAsync("window.getSelection().removeAllRanges();");
+            }
+            overlay.PointerPressed += (s, e) => closeDialog();
+            (Content as Panel)?.Children.Add(overlay);
+            (Content as Panel)?.Children.Add(pageOptionsDialog);
+            pageOptionsDialog.HorizontalAlignment = HorizontalAlignment.Center;
+            pageOptionsDialog.VerticalAlignment = VerticalAlignment.Center;
+
+            pageOptionsDialog.CustomThemeRequested += async (s, e) =>
+            {
+                ContentDialog customDialog = new()
+                {
+                    Title = "Custom Theme",
+                    PrimaryButtonText = "OK",
+                    CloseButtonText = "Cancel",
+                    XamlRoot = XamlRoot,
+                    RequestedTheme = RequestedTheme
+                };
+                ColorSelectDialog themeCreator = new()
+                {
+                    ColorSelectText = "Select Background Color"
+                };
+                customDialog.Content = themeCreator;
+                var bgresult = await customDialog.ShowAsync();
+                string bg = string.Empty;
+                string fg = string.Empty;
+                if (bgresult == ContentDialogResult.Primary)
+                {
+                    bg = $"#{themeCreator.SelectedColor.R:X2}{themeCreator.SelectedColor.G:X2}{themeCreator.SelectedColor.B:X2}";
+
+                    themeCreator.ColorSelectText = "Select Foreground Color";
+                    var fgresult = await customDialog.ShowAsync();
+                    if (fgresult == ContentDialogResult.Primary)
+                    {
+                        fg = $"#{themeCreator.SelectedColor.R:X2}{themeCreator.SelectedColor.G:X2}{themeCreator.SelectedColor.B:X2}";
+                    }
+                }      
+
+                if (!string.IsNullOrEmpty(bg) && !string.IsNullOrEmpty(fg))
+                {
+                    string themeName = "Custom";
+                    int suffix = 1;
+                    while (_themeManager.GetTheme(themeName) != null)
+                    {
+                        themeName = $"Custom {suffix}";
+                        suffix++;
+                    }
+                    BookTheme custom = new() { Name = themeName, Background = bg, Foreground = fg };
+                    _themeManager.AddOrUpdateTheme(custom);
+                    await _themeManager.SaveAsync();
+
+                    ReaderThemeName = themeName;
+                    await pageOptionsDialog.ThemeManager.LoadAsync();
+                    pageOptionsDialog.InitThemes();
+                }
+
+            };
         }
 
         private void OnPropertyChanged(string? propertyName = null)

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="Shinobu.Pages.ReaderPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -8,21 +7,21 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="Black">
+    <Grid>
         <WebView2
             x:Name="ReaderWebView"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" />
+            VerticalAlignment="Stretch" DefaultBackgroundColor="Transparent" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,20" Spacing="20"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" CornerRadius="15">
             <Button x:Name="PrevButton" Content="Previous" Click="PrevButton_Click" IsEnabled="{x:Bind CanGoPrev, Mode=OneWay}" />
             <TextBlock x:Name="PageTextBlock" Text="{x:Bind PageText, Mode=OneWay}" VerticalAlignment="Center" />
             <Button x:Name="NextButton" Content="Next" Click="NextButton_Click" IsEnabled="{x:Bind CanGoNext, Mode=OneWay}" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,20" Spacing="10"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" CornerRadius="15">
             <ComboBox x:Name="JlptLevelComboBox" SelectedItem="{x:Bind UserJlptLevel, Mode=TwoWay}" ItemsSource="{x:Bind JlptLevels}" />
             <Button x:Name="PageOptionsButton" Click="PageOptionsButton_Click">
                 <FontIcon Glyph="" />
