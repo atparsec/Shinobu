@@ -461,11 +461,11 @@ namespace Shinobu.Pages
                     function goToPage(p) {{
                         if ({_isVerticalText.ToString().ToLower()}) {{
                             const pageHeight = document.documentElement.clientHeight;
-                            window.scrollTo(0, p * (pageHeight+{ReaderMargin-30}));
+                            window.scrollTo({{ top: p * (pageHeight+{ReaderMargin-30}), behavior: 'smooth' }});
                             return;
                         }}
                         const pageWidth = document.documentElement.clientWidth;
-                        window.scrollTo(p * pageWidth, 0);
+                        window.scrollTo({{ left: p * pageWidth, behavior: 'smooth' }});
                     }}
 
                     document.addEventListener('mouseup', () => {{
