@@ -20,13 +20,14 @@ namespace Shinobu.Helpers
 
         public async Task<string> GenerateHtmlFuriganaAsync(string text, JlptLevel level)
         {
-            if (string.IsNullOrWhiteSpace(text)) return text;
-            if (text.Contains("<ruby>")) return text; // already has → skip
-            if (!ContainsKanji(text)) return text;
+            if (text.Contains("<ruby>"))
+            {
+                return text; // already has → skip
+            }
 
             // Handle images
-            var imgTags = new List<string>();
-            var imgRegex = new Regex(@"<img[^>]*>", RegexOptions.IgnoreCase);
+            List<string> imgTags = [];
+            Regex imgRegex = new(@"<img[^>]*>", RegexOptions.IgnoreCase);
             int imgIndex = 0;
             string textWithoutImgs = imgRegex.Replace(text, match =>
             {
@@ -34,15 +35,61 @@ namespace Shinobu.Helpers
                 return $"__IMG_{imgIndex++}__";
             });
 
+            var sentencePattern = @"[。. ]";
+            var matches = Regex.Matches(textWithoutImgs, sentencePattern);
+            List<int> sentenceEndIndices = [.. matches.Cast<Match>().Select(m => m.Index + m.Length)];
+
+            int chunkSize = 20;
+            List<string> chunks = [];
+            int start = 0;
+            int sentenceCount = 0;
+            for (int i = 0; i < sentenceEndIndices.Count; i++)
+            {
+                sentenceCount++;
+                if (sentenceCount == chunkSize || i == sentenceEndIndices.Count - 1)
+                {
+                    int end = sentenceEndIndices[i];
+                    string chunk = textWithoutImgs[start..end];
+                    if (!string.IsNullOrEmpty(chunk))
+                    {
+                        chunks.Add(chunk);
+                    }
+                    start = end;
+                    sentenceCount = 0;
+                }
+            }
+            if (start < textWithoutImgs.Length)
+            {
+                string chunk = textWithoutImgs[start..];
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    chunks.Add(chunk);
+                }
+            }
+
+            List<Task<string>> tasks = [.. chunks.Select(chunk => ProcessChunkAsync(chunk, level))];
+            var results = await Task.WhenAll(tasks);
+            string combinedResult = string.Join("", results);
+
+            // Restore images
+            for (int i = 0; i < imgTags.Count; i++)
+            {
+                combinedResult = combinedResult.Replace($"__IMG_{i}__", imgTags[i]);
+            }
+            return combinedResult;
+        }
+
+        private async Task<string> ProcessChunkAsync(string chunk, JlptLevel level)
+        {
             var divisions = await _converter.GetDivisions(
-                textWithoutImgs,
+                chunk,
                 To.Hiragana,
                 Mode.Furigana,
                 RomajiSystem.Hepburn,
                 "⦗", "⦘"
             );
 
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
 
             foreach (var division in divisions)
             {
@@ -54,7 +101,9 @@ namespace Shinobu.Helpers
                     // Try to separate kanji stem vs okurigana tail
                     int kanjiLength = surface.Length;
                     while (kanjiLength > 0 && Utilities.IsKana(surface[kanjiLength - 1]))
+                    {
                         kanjiLength--;
+                    }
 
                     if (IsAllKnownKanji(surface, level))
                     {
@@ -87,33 +136,27 @@ namespace Shinobu.Helpers
                 else
                 {
                     sb.Append(surface);
-                    continue;
                 }
             }
 
-            string result = sb.ToString();
-            for (int i = 0; i < imgTags.Count; i++)
-            {
-                result = result.Replace($"__IMG_{i}__", imgTags[i]);
-            }
-            return result;
+            return sb.ToString();
         }
 
         private static bool ContainsKanji(string s)
         {
-            return s.Any(c => c >= '\u4E00' && c <= '\u9FFF');
+            return s.Any(c => c is >= '\u4E00' and <= '\u9FFF');
         }
 
         private static bool IsAllKnownKanji(string surface, JlptLevel level)
         {
             if (level == JlptLevel.N1)
+            {
                 return true; // If N1 specified, all kanji are considered "known" to be ignored
-            var kanjiChars = surface.Where(c => c >= '\u4E00' && c <= '\u9FFF').ToList();
-            var knownKanjiSet = _jlptKanji.KanjiLevels[level];
-            if (knownKanjiSet == null)
-                return false;
-            return kanjiChars.All(c => knownKanjiSet.Contains(c));
+            }
 
+            List<char> kanjiChars = surface.Where(c => c is >= '\u4E00' and <= '\u9FFF').ToList();
+            var knownKanjiSet = _jlptKanji.KanjiLevels[level];
+            return knownKanjiSet != null && kanjiChars.All(knownKanjiSet.Contains);
         }
 
     }
