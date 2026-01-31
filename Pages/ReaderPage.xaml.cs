@@ -14,7 +14,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using UglyToad.PdfPig.Logging;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Popups;

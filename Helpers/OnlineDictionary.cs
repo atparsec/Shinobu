@@ -46,7 +46,6 @@ namespace Shinobu.Helpers
                     string.Join("; ", allDefinitions),
                     [.. allTags]
                 );
-                Debug.WriteLine($"Tags found: {string.Join(", ", definition.Tags)}");
                 return definition;
             }
             return new Definition("", "", "Not found", []);
