@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Shinobu.Helpers;
+using Windows.UI;
 
 namespace Shinobu.Helpers
 {
@@ -185,10 +186,10 @@ namespace Shinobu.Helpers
         public static string InjectImages(string text, List<ImageContent> images)
         {
             var sb = new StringBuilder(text);
-            foreach (var img in images.OrderByDescending(i => i.Offset))
+            foreach (var img in images.OrderByDescending(i => i.Id))
             {
                 sb.Insert(img.Offset,
-                    $"<img src='images/{img.Id}{img.Extension}' style='max-width:100%;display:block;margin:1em auto;'/>");
+                    $"<img src='images/{img.Id}{img.Extension}' style='max-width:100%;max-height:100%;'/>");
             }
             return sb.ToString();
         }
@@ -304,8 +305,8 @@ namespace Shinobu.Helpers
         {
             string backgroundColor = theme.Background;
             string textColor = theme.Foreground;
-            string accentColor = "#0078D4"; // Default accent, or get from settings
-            string accentHex = accentColor;
+            Color accentColor = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+            string accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}";
 
             string bodyStyle = $@"
                 background-color: {backgroundColor};

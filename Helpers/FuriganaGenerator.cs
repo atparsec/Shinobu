@@ -32,10 +32,10 @@ namespace Shinobu.Helpers
             string textWithoutImgs = imgRegex.Replace(text, match =>
             {
                 imgTags.Add(match.Value);
-                return $"__IMG_{imgIndex++}__";
+                return $"_IMG{imgIndex++}_";
             });
 
-            var sentencePattern = @"[。. ]";
+            var sentencePattern = @"[。.]";
             var matches = Regex.Matches(textWithoutImgs, sentencePattern);
             List<int> sentenceEndIndices = [.. matches.Cast<Match>().Select(m => m.Index + m.Length)];
 
@@ -69,18 +69,23 @@ namespace Shinobu.Helpers
 
             List<Task<string>> tasks = [.. chunks.Select(chunk => ProcessChunkAsync(chunk, level))];
             var results = await Task.WhenAll(tasks);
-            string combinedResult = string.Join("", results);
+            string combinedResult = string.Join(" ", results);
 
             // Restore images
             for (int i = 0; i < imgTags.Count; i++)
             {
-                combinedResult = combinedResult.Replace($"__IMG_{i}__", imgTags[i]);
+                combinedResult = combinedResult.Replace($"_IMG{i}_", imgTags[i]);
             }
             return combinedResult;
         }
 
         private async Task<string> ProcessChunkAsync(string chunk, JlptLevel level)
         {
+            if (!ContainsKanji(chunk))
+            {
+                return chunk;
+            }
+
             var divisions = await _converter.GetDivisions(
                 chunk,
                 To.Hiragana,
