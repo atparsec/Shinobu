@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="Shinobu.Pages.LibraryPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,9 +6,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d"
+    xmlns:helpers="using:Shinobu.Helpers"
     Loaded="Page_Loaded">
 
     <Page.Resources>
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <helpers:InvertedBoolToVisibilityConverter x:Key="InvertedBoolToVisibilityConverter"/>
         <DataTemplate x:Key="BookCardTemplate">
             <Grid
                 Width="150"
@@ -46,6 +48,7 @@
                                 TextWrapping="WrapWholeWords"
                                 MaxLines="3"
                                 Foreground="#121212"
+                                Visibility="{Binding ShowInfoText, Converter={StaticResource BoolToVisibilityConverter}}"
                                 />
 
                             <TextBlock
@@ -55,6 +58,7 @@
                                 MaxLines="4"
                                 TextWrapping="Wrap"
                                 Foreground="#121212"
+                                Visibility="{Binding ShowInfoText, Converter={StaticResource BoolToVisibilityConverter}}"
                                 />
                         </StackPanel>
 
@@ -68,7 +72,7 @@
                                 Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
                                 FontSize="11"
                                 />
-                            
+
                             <TextBlock
                                 Text="{Binding ExtensionName}"
                                 FontSize="11"
@@ -123,9 +127,17 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Text="Library" FontSize="32" FontWeight="Bold" Grid.Column="0"/>
-            <Button x:Name="RefreshButton" Click="RefreshButton_Click" Grid.Column="2" HorizontalAlignment="Right" Width="40" Height="40" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="Refresh Library">
-                <FontIcon Glyph="&#xE72C;" />
-            </Button>
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Grid.Column="2" x:Name="LibraryActionsPanel">
+                <Button Click="ImportButton_Click">
+                    <FontIcon Glyph="&#xE8E5;" />
+                </Button>
+                <Button Click="ImportFolderButton_Click">
+                    <FontIcon Glyph="&#xE8F4;" />
+                </Button>
+                <Button x:Name="RefreshButton" Click="RefreshButton_Click" BorderThickness="0" ToolTipService.ToolTip="Refresh Library">
+                    <FontIcon Glyph="&#xE72C;" />
+                </Button>
+            </StackPanel>
         </Grid>
 
         <StackPanel x:Name="FavoritesSection" Grid.Row="1" Visibility="Collapsed" Margin="0,20,0,30">
@@ -139,21 +151,42 @@
 
         <TextBlock Grid.Row="2" Text="All Books" FontSize="24" FontWeight="SemiBold" Padding="0,0,0,20" />
 
-        <GridView
-        x:Name="BooksGrid"
-        Grid.Row="3"
-        SelectionMode="Single"
-        Padding="0">
-            <GridView.ItemTemplate>
-                <StaticResource ResourceKey="BookCardTemplate"/>
-            </GridView.ItemTemplate>
+        <Grid
+        Grid.Row="3">
 
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <VariableSizedWrapGrid Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-        </GridView>
+            <GridView
+            x:Name="BooksGrid"
+            SelectionMode="Single"
+            Padding="0"
+            Visibility="{Binding IsLibraryEmpty, Converter={StaticResource InvertedBoolToVisibilityConverter}}">
+                <GridView.ItemTemplate>
+                    <StaticResource ResourceKey="BookCardTemplate"/>
+                </GridView.ItemTemplate>
+
+                <GridView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VariableSizedWrapGrid Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </GridView.ItemsPanel>
+            </GridView>
+
+            <StackPanel 
+                x:Name="EmptyLibraryPanel"
+                Orientation="Vertical" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center" 
+                Spacing="16"
+                >
+                <FontIcon Glyph="&#xE8F1;" FontSize="60" Opacity="0.6" HorizontalAlignment="Center"/>
+                <TextBlock Text="Library is empty!" FontSize="30" FontWeight="SemiBold" HorizontalAlignment="Center" HorizontalTextAlignment="Center"/>
+                <TextBlock Text="Import or drag txt/pdf/epub files here to get started." FontSize="16" Opacity="0.7" HorizontalAlignment="Center" HorizontalTextAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                    <Button Content="Import" Click="ImportButton_Click" />
+                    <Button Content="Import Folder" Click="ImportFolderButton_Click" />
+                </StackPanel>
+            </StackPanel>
+
+        </Grid>
     </Grid>
 
 </Page>

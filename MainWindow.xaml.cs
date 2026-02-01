@@ -118,19 +118,15 @@ namespace Shinobu
                     {
                         if (SupportedFileTypes.Extensions.ContainsKey(storageFile.FileType.ToLower()))
                         {
-                            string? libraryFolder = _settings.Values.TryGetValue("LibraryFolder", out object? v) ? v as string : null;
-                            if (string.IsNullOrEmpty(libraryFolder))
+                            var entry = await BookManager.CreateBookAsync(storageFile.Path);
+                            if (entry != null)
                             {
-                                libraryFolder = ApplicationData.Current.LocalFolder.Path;
-                            }
-                            var libStorage = await StorageFolder.GetFolderFromPathAsync(libraryFolder);
-                            var newFile = await storageFile.CopyAsync(libStorage, storageFile.Name, NameCollisionOption.ReplaceExisting);
-                            if (navFrame.Content is LibraryPage libraryPage)
-                            {
-                                navFrame.Navigate(typeof(ReaderPage), newFile.Path);
+                                if (navFrame.Content is LibraryPage)
+                                {
+                                    navFrame.Navigate(typeof(ReaderPage), entry.Hash);
+                                }
                             }
                         }
-
                     }
                 }
             }

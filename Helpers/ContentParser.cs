@@ -29,7 +29,8 @@ namespace Shinobu.Helpers
         public static readonly Dictionary<string, string> Extensions = new()
         {
             { ".txt", "Plain Text" },
-            { ".pdf", "PDF" }
+            { ".pdf", "PDF" },
+            { ".epub", "EPUB" }
         };
     }
 
@@ -86,6 +87,15 @@ namespace Shinobu.Helpers
         }
     }
 
+    public class EpubContentParser : IContentParser
+    {
+        public async Task<BookContent> ParseContentAsync(string filePath)
+        {
+            // TODO
+            return new BookContent { TextContent = "EPUB parsing not implemented yet." };
+        }
+    }
+
     public static class ContentParserFactory
     {
         public static IContentParser GetParser(string fileExtension)
@@ -94,6 +104,7 @@ namespace Shinobu.Helpers
             {
                 ".txt" => new TextContentParser(),
                 ".pdf" => new PdfContentParser(),
+                ".epub" => new EpubContentParser(),
                 _ => throw new NotSupportedException($"File extension {fileExtension} is not supported."),
             };
         }
