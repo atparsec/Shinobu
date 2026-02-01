@@ -233,6 +233,15 @@ namespace Shinobu.Pages
                             }}
                         }}
                     }});
+                    document.addEventListener('keydown', function (event) {{
+                        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {{
+                            window.chrome.webview.postMessage('nav: next');
+                            event.preventDefault();
+                        }} else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {{
+                            window.chrome.webview.postMessage('nav: prev');
+                            event.preventDefault();
+                        }}
+                    }});
                     function getTextOffset(root, node, offset) {{
                         var text = '';
                         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
@@ -300,7 +309,7 @@ namespace Shinobu.Pages
             {
                 mainWindow.SelectReaderNavigation();
             }
-
+            ReaderWebView.Focus(FocusState.Programmatic);
         }
 
         private async Task SelectTextAtOffsetAsync(int offset, int length)
@@ -401,6 +410,7 @@ namespace Shinobu.Pages
             _currentPage = page;
             OnPropertyChanged();
             await ReaderWebView.ExecuteScriptAsync($"goToPage({page});");
+            ReaderWebView.Focus(FocusState.Programmatic);
         }
 
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
@@ -427,6 +437,18 @@ namespace Shinobu.Pages
                 if (parts.Length == 2 && int.TryParse(parts[0], out int start))
                 {
                     await ShowSelectedTextPopup(parts[1], start);
+                }
+            }
+            else if (msg.StartsWith("nav:"))
+            {
+                string direction = msg["nav:".Length..].Trim();
+                if (direction == "next" && CanGoNext)
+                {
+                    await GoToPage(_currentPage + 1);
+                }
+                else if (direction == "prev" && CanGoPrev)
+                {
+                    await GoToPage(_currentPage - 1);
                 }
             }
         }
