@@ -99,13 +99,13 @@ namespace Shinobu
             }
         }
 
-        public void SelectReaderNavigation()
+        public void SelectNavigation(string key)
         {
-            var readerItem = navView.MenuItems.OfType<NavigationViewItem>()
-                .FirstOrDefault(item => item.Tag as string == "reader");
-            if (readerItem != null)
+            var item = navView.MenuItems.OfType<NavigationViewItem>()
+                .FirstOrDefault(item => item.Tag as string == key);
+            if (item != null)
             {
-                navView.SelectedItem = readerItem;
+                navView.SelectedItem = item;
             }
         }
 

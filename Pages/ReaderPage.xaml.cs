@@ -315,7 +315,7 @@ namespace Shinobu.Pages
 
             if (App.MainWindowInstance is MainWindow mainWindow)
             {
-                mainWindow.SelectReaderNavigation();
+                mainWindow.SelectNavigation("reader");
             }
             ReaderWebView.Focus(FocusState.Programmatic);
         }
