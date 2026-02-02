@@ -9,6 +9,7 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -59,24 +60,13 @@ namespace Shinobu.Pages
                     item.DateModified = info.LastWriteTime.ToShortDateString();
                 }
 
-                // Load preview text
-                try
-                {
-                    var content = await BookManager.LoadBookContentAsync(entry.Hash);
-                    item.PreviewText = content.TextContent.Length > 100 ? content.TextContent[..100] + "..." : content.TextContent;
-                }
-                catch
-                {
-                    item.PreviewText = "Preview unavailable";
-                }
-
                 if (entry.PreviewImagePath != null)
                 {
-                    item.BackgroundBrush = new Microsoft.UI.Xaml.Media.ImageBrush
+                    item.BackgroundBrush = new ImageBrush
                     {
                         ImageSource = new BitmapImage(new Uri(entry.PreviewImagePath)),
                         Stretch = Stretch.UniformToFill,
-                        Opacity = 0.2
+                        Opacity = 1.0
                     };
                 }
                 else
@@ -86,14 +76,18 @@ namespace Shinobu.Pages
                     byte g = byte.Parse(colorHex[3..5], NumberStyles.HexNumber);
                     byte b = byte.Parse(colorHex[5..7], NumberStyles.HexNumber);
                     var gradientColor = Windows.UI.Color.FromArgb(255, r, g, b);
+                    var lighterGradientColor = Windows.UI.Color.FromArgb(255,
+                        (byte)Math.Min(r + 50, 255),
+                        (byte)Math.Min(g + 50, 255),
+                        (byte)Math.Min(b + 50, 255));
                     item.BackgroundBrush = new LinearGradientBrush
                     {
                         StartPoint = new Windows.Foundation.Point(0, 0),
-                        EndPoint = new Windows.Foundation.Point(0, 1),
+                        EndPoint = new Windows.Foundation.Point(1, 0),
                         GradientStops =
                         {
-                            new GradientStop { Color = Windows.UI.Color.FromArgb(255, 238, 238, 238), Offset = 0 }, // #EEEEEE
-                            new GradientStop { Color = gradientColor, Offset = 1 }
+                            new GradientStop { Color = gradientColor, Offset =0 },
+                            new GradientStop { Color = lighterGradientColor, Offset = 1 },
                         }
                     };
                 }
@@ -147,7 +141,7 @@ namespace Shinobu.Pages
             }
         }
 
-        private void FavoriteButton_Click(object sender, RoutedEventArgs e)
+        private void FavoriteButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is BookItem item)
             {
@@ -163,6 +157,7 @@ namespace Shinobu.Pages
                 UpdateFavoritesVisibility();
                 SaveFavorites();
             }
+            e.Handled = true;
         }
 
         private void BookCard_Tapped(object sender, TappedRoutedEventArgs e)

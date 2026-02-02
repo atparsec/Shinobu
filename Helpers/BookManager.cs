@@ -77,7 +77,19 @@ namespace Shinobu.Helpers
                 byte[] data = img.ImageData;
                 string imgPath = Path.Combine(imagesDir, $"{img.Id}{img.Extension}");
                 await File.WriteAllBytesAsync(imgPath, data);
-                img.ImageData = Array.Empty<byte>(); // Clear after saving
+                img.ImageData = []; // Clear after saving
+            }
+
+            string previewImagePath = null;
+            if (content.Images.Count > 0)
+            {
+                var firstImage = content.Images[0];
+                if (firstImage.Width >= 200 && firstImage.Height >= 200)
+                {
+                    previewImagePath = Path.Combine(bookDir, "preview" + firstImage.Extension);
+                    string firstImagePath = Path.Combine(imagesDir, $"{firstImage.Id}{firstImage.Extension}");
+                    File.Copy(firstImagePath, previewImagePath, true);
+                }
             }
 
             BookEntry entry = new()
@@ -85,7 +97,7 @@ namespace Shinobu.Helpers
                 Title = title,
                 Hash = fileHash,
                 OriginalFilePath = originalFileCopy,
-                PreviewImagePath = null
+                PreviewImagePath = previewImagePath
             };
             _index[title] = entry;
             SaveIndex();

@@ -25,14 +25,8 @@
                     CornerRadius="12"
                     BorderThickness="1"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{Binding BackgroundBrush}"
                     >
-
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#EEEEEE" Offset="0"/>
-                            <GradientStop Color="{Binding BookColor}" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
 
                     <Grid Padding="12">
                         <Grid.RowDefinitions>
@@ -43,21 +37,11 @@
                         <StackPanel Spacing="6" Padding="12">
                             <TextBlock
                                 Text="{Binding FileName, Converter={StaticResource FilenameFromPathConverter}}"
-                                FontSize="22"
+                                FontSize="28"
                                 FontWeight="SemiBold"
-                                TextWrapping="WrapWholeWords"
-                                MaxLines="3"
-                                Foreground="#121212"
-                                Visibility="{Binding ShowInfoText, Converter={StaticResource BoolToVisibilityConverter}}"
-                                />
-
-                            <TextBlock
-                                Text="{Binding PreviewText}"
-                                FontSize="12"
-                                Opacity="0.8"
-                                MaxLines="4"
+                                MaxLines="2"
+                                TextTrimming="CharacterEllipsis"
                                 TextWrapping="Wrap"
-                                Foreground="#121212"
                                 Visibility="{Binding ShowInfoText, Converter={StaticResource BoolToVisibilityConverter}}"
                                 />
                         </StackPanel>
@@ -66,7 +50,11 @@
                             Grid.Row="1"
                             Spacing="2"
                             Opacity="0.75"
-                            Padding="12">
+                            Padding="6"
+                            Margin="12,0,0,0"
+                            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                            CornerRadius="10"
+                            >
 
                             <TextBlock
                                 Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
@@ -95,7 +83,7 @@
                             Margin="0,-10,-10,0"
                             Background="#66000000"
                             CornerRadius="17"
-                            Click="FavoriteButton_Click"
+                            Tapped="FavoriteButton_Tapped"
                          >
                             <TextBlock Text="{Binding IsFavorite, Converter={StaticResource BoolToStringConverter}}" FontSize="14" Foreground="Gold"/>
                         </Button>
@@ -103,10 +91,11 @@
                     </Grid>
                 </Border>
                 <Border
-                    Width="12"
+                    Width="15"
                     HorizontalAlignment="Left"
                     Background="#33000000"
-                    CornerRadius="12,0,0,12"/>
+                    CornerRadius="12,0,0,12"
+                    />
             </Grid>
         </DataTemplate>
     </Page.Resources>
