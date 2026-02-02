@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.WordExtractor;
+using System.Text;
 
 namespace Shinobu.Helpers
 {
@@ -12,14 +16,23 @@ namespace Shinobu.Helpers
         public int Offset { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }
-        public byte[] ImageData { get; set; } = Array.Empty<byte>();
+        public byte[] ImageData { get; set; } = [];
         public string Extension { get; set; } = ".jpg";
     }
 
     public class BookContent
     {
         public string TextContent { get; set; } = string.Empty;
-        public List<ImageContent> Images { get; set; } = new();
+        public List<ImageContent> Images { get; set; } = [];
+        public List<HeadingNode> TableOfContents { get; set; } = [];
+    }
+
+    public class HeadingNode
+    {
+        public required string Title { get; set; }
+        public required int StartOffset { get; set; }
+        public required int Level { get; set; }
+        public List<HeadingNode> Children { get; } = [];
     }
 
     public interface IContentParser { Task<BookContent> ParseContentAsync(string filePath); }
@@ -49,16 +62,21 @@ namespace Shinobu.Helpers
         {
             using (var document = PdfDocument.Open(filePath))
             {
-                var text = string.Empty;
-                foreach (var page in document.GetPages())
-                {
-                    text += page.Text;
-                }
+                var textBuilder = new StringBuilder();
                 var images = new List<ImageContent>();
                 int offset = 0;
                 int imgId = 0;
                 foreach (var page in document.GetPages())
                 {
+                    var words = page.GetWords(NearestNeighbourWordExtractor.Instance).ToList();
+                    var pageText = string.Join(" ", words.Where(w => w.Text.Length > 0).Select(w => w.Text));
+                    if (pageText.Length > 30)
+                    {
+                        textBuilder.AppendLine();
+                        textBuilder.AppendLine();
+                    }
+                    textBuilder.Append(pageText);
+
                     foreach (var image in page.GetImages())
                     {
                         byte[] imageBytes;
@@ -80,9 +98,10 @@ namespace Shinobu.Helpers
                             ImageData = imageBytes
                         });
                     }
-                    offset += page.Text.Length;
+
+                    offset += pageText.Length;
                 }
-                return new BookContent { TextContent = text, Images = images };
+                return new BookContent { TextContent = textBuilder.ToString(), Images = images };
             }
         }
     }

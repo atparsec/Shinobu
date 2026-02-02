@@ -20,7 +20,7 @@ namespace Shinobu.Helpers
 
         public async Task<string> GenerateHtmlFuriganaAsync(string text, JlptLevel level)
         {
-            if (text.Contains("<ruby>"))
+            if (text[..Math.Min(500, text.Length)].Contains("<ruby>"))
             {
                 return text; // already has → skip
             }
@@ -159,7 +159,7 @@ namespace Shinobu.Helpers
                 return true; // If N1 specified, all kanji are considered "known" to be ignored
             }
 
-            List<char> kanjiChars = surface.Where(c => c is >= '\u4E00' and <= '\u9FFF').ToList();
+            List<char> kanjiChars = [.. surface.Where(c => c is >= '\u4E00' and <= '\u9FFF')];
             var knownKanjiSet = _jlptKanji.KanjiLevels[level];
             return knownKanjiSet != null && kanjiChars.All(knownKanjiSet.Contains);
         }

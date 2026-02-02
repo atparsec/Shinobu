@@ -77,7 +77,16 @@
             <Frame x:Name="navFrame" />
         </NavigationView>
 
-        <Border Grid.Row="0" Grid.RowSpan="2" Visibility="{x:Bind IsDragOver, Mode=OneWay}" Background="#4D000000" BorderBrush="{StaticResource AccentAAFillColorDefaultBrush}" BorderThickness="3" CornerRadius="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
+        <Border x:Name="LoadingRing" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Background="#8D000000" Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" CornerRadius="10">
+                <ProgressRing IsActive="True" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock Text="Adding Book to Library..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18" Foreground="White" Margin="0,10,0,0"/>
+                <TextBlock Text="Parsing for the first time can take a few seconds." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" Foreground="LightGray" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <Border Grid.Row="0" Grid.RowSpan="2" Visibility="{x:Bind IsDragOver, Mode=OneWay}" Background="#5D000000" BorderBrush="{StaticResource AccentAAFillColorDefaultBrush}" BorderThickness="3" CornerRadius="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <TextBlock Text="Drop file here" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="White" />
         </Border>
 

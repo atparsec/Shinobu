@@ -110,6 +110,7 @@ namespace Shinobu
             IsDragOver = false;
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
+                LoadingRing.Visibility = Visibility.Visible;
                 var items = await e.DataView.GetStorageItemsAsync();
                 if (items.Count > 0)
                 {
@@ -129,6 +130,7 @@ namespace Shinobu
                         }
                     }
                 }
+                LoadingRing.Visibility = Visibility.Collapsed;
             }
         }
 
