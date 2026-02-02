@@ -73,6 +73,10 @@
                             />
                     </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
+                <NavigationViewItem
+                    Content="Image OCR"
+                    Icon="Camera"
+                    Tag="imageocr" />
             </NavigationView.MenuItems>
             <Frame x:Name="navFrame" />
         </NavigationView>

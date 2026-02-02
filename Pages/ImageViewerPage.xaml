@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Shinobu.Pages.ImageViewerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Shinobu.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid">
+        <StackPanel x:Name="DefaultPanel" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+            <FontIcon Glyph="&#xE7AA;" FontSize="48" HorizontalAlignment="Center"/>
+            <TextBlock Text="Image Annotation" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+            <Button Content="Open Image" Click="OpenImageButton_Click" HorizontalAlignment="Stretch"/>
+            <Button Content="Paste from Clipboard" Click="PasteFromClipboardButton_Click" HorizontalAlignment="Stretch"/>
+            <TextBlock Text="or drop an image" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <Grid x:Name="ViewerGrid" Visibility="Collapsed">
+            <ScrollViewer Grid.Row="1" x:Name="ImageScrollViewer" HorizontalScrollMode="Auto" VerticalScrollMode="Auto" ManipulationMode="All" PointerPressed="ImageScrollViewer_PointerPressed" PointerMoved="ImageScrollViewer_PointerMoved" PointerReleased="ImageScrollViewer_PointerReleased" PointerWheelChanged="ImageScrollViewer_PointerWheelChanged" >
+                <Image x:Name="ImageControl" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </ScrollViewer>
+            
+            <Button x:Name="PrevButton" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="Collapsed" Click="PrevButton_Click">
+                <FontIcon Glyph="&#xE76B;" FontSize="24"/>
+            </Button>
+            <Button x:Name="NextButton" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="Collapsed" Click="NextButton_Click">
+                <FontIcon Glyph="&#xE76C;" FontSize="24"/>
+            </Button>
+
+            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Opacity="0.9" Padding="5" Spacing="5" Orientation="Horizontal" CornerRadius="10">
+                <Button Content="-" Click="ZoomOutButton_Click"/>
+                <Slider x:Name="ZoomSlider" Minimum="0.1" Maximum="5" Value="1" StepFrequency="0.1" ValueChanged="ZoomSlider_ValueChanged" Width="100"/>
+                <Button Content="+" Click="ZoomInButton_Click"/>
+                <Button Click="InvertButton_Click">
+                    <FontIcon Glyph="&#xED66;" FontSize="16"/>
+                </Button>
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Opacity="0.9" Padding="10" Spacing="5">
+                <TextBlock x:Name="OcrTextBlock" Text="OCR Text..." TextWrapping="Wrap" FontSize="16"/>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Copy Text" Click="CopyTextButton_Click"/>
+                    <Button Content="Save Annotated" Click="SaveAnnotatedButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

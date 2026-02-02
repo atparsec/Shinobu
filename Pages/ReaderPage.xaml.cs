@@ -9,6 +9,7 @@ using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -456,6 +457,14 @@ namespace Shinobu.Pages
                 else if (direction == "prev" && CanGoPrev)
                 {
                     await GoToPage(_currentPage - 1);
+                }
+            } else if (msg.StartsWith("image:"))
+            {
+                string imageId = msg["image:".Length..];
+                string? imagePath = BookManager.GetBookImagePathById(_bookHash, imageId);
+                if (imagePath != null)
+                {
+                    Frame.Navigate(typeof(ImageViewerPage), imagePath);
                 }
             }
         }

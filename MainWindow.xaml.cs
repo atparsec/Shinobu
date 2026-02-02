@@ -67,6 +67,10 @@ namespace Shinobu
                     case "bookmarks":
                         navFrame.Navigate(typeof(BookmarksPage));
                         break;
+                    case "imageocr":
+                        navFrame.Navigate(typeof(ImageViewerPage));
+                        break;
+
                 }
             }
         }

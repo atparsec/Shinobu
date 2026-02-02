@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -140,6 +141,13 @@ namespace Shinobu.Helpers
             return content;
         }
 
+        public static string? GetBookImagePathById(string hash, string id)
+        {
+            string bookDir = GetBookDirectory(hash);
+            string imgPath = Path.Combine(bookDir, "images", $"{id}.jpg");
+            return File.Exists(imgPath) ? imgPath : null;
+        }
+
         public static string GetBookDirectory(string hash)
         {
             return Path.Combine(BooksPath, hash);
@@ -201,7 +209,7 @@ namespace Shinobu.Helpers
             foreach (var img in images.OrderByDescending(i => i.Id))
             {
                 sb.Insert(img.Offset,
-                    $"<img src='images/{img.Id}{img.Extension}' style='max-width:100%;max-height:100%;'/>");
+                    $"<img src='images/{img.Id}{img.Extension}' style='max-width:100%;max-height:100%;cursor:pointer;' onclick=\"window.chrome.webview.postMessage('image:{img.Id}')\"/>");
             }
             return sb.ToString();
         }
