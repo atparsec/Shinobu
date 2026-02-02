@@ -242,6 +242,13 @@ namespace Shinobu.Pages
                             event.preventDefault();
                         }}
                     }});
+                    document.addEventListener('wheel', function (event) {{
+                        if (event.deltaY > 0) {{
+                            window.chrome.webview.postMessage('nav: next');
+                        }} else if (event.deltaY < 0) {{
+                            window.chrome.webview.postMessage('nav: prev');
+                        }}
+                    }});
                     function getTextOffset(root, node, offset) {{
                         var text = '';
                         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
