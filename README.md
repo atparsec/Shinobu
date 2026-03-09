@@ -5,10 +5,9 @@
 
 ___
 
-Shinobu is a Japanese reader app for learners, which automatically annotates plain Japanese text with furigana based on the selected Japanese level, and allows for quickly looking up words, translating sentences, and getting explanations.
+Shinobu is a Japanese reader app for learners, which automatically annotates plain Japanese text with furigana based on the selected Japanese level, and allows for quickly looking up words, translating sentences, and getting explanations. Books are displayed with any included images in-text for an immersive reading experience.
 
 Supports extensive customization of the reading experience, such as horizontal vs vertical text, line spacing, font, etc. and automatically paginates text for a book-like experience.
-
 ## Screenshots
 
 <table>
