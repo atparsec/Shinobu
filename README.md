@@ -11,9 +11,16 @@ Supports extensive customization of the reading experience, such as horizontal v
 
 ## Screenshots
 
-![Library](Images/library.png)
-![Book Reader](Images/book.png)
-![Dialog](Images/dialog.png)
+<table>
+  <tr>
+    <td><img src="Images/library.png" width="300" alt="Library"></td>
+    <td><img src="Images/book.png" width="300" alt="Book Reader"></td>
+  </tr>
+  <tr>
+    <td><img src="Images/dialog.png" width="300" alt="Dialog"></td>
+    <td></td>
+  </tr>
+</table>
 
 ## Dependencies
 
