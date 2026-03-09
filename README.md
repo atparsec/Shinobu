@@ -5,9 +5,10 @@
 
 ___
 
-Shinobu is a Japanese reader app for learners, which automatically annotates plain Japanese text with furigana based on the selected Japanese level, and allows for quickly looking up words, translating sentences, and getting explanations. Books are displayed with any included images in-text for an immersive reading experience.
+Shinobu is a Japanese reader app for learners, which automatically annotates plain Japanese text with furigana based on the selected Japanese level, and allows for quickly looking up words, translating sentences, and getting explanations.
 
 Supports extensive customization of the reading experience, such as horizontal vs vertical text, line spacing, font, etc. and automatically paginates text for a book-like experience.
+
 ## Screenshots
 
 <table>
@@ -17,7 +18,7 @@ Supports extensive customization of the reading experience, such as horizontal v
   </tr>
   <tr>
     <td><img src="Images/dialog.png" width="300" alt="Dialog"></td>
-    <td></td>
+    <td><img src="Images/book2.png" width="300" alt="Book with Image"></td>
   </tr>
 </table>
 
@@ -53,8 +54,8 @@ Additionally, the following files need to be placed in the solution folder:
  - Release on the Microsoft Store.
 
 ## Attribution
-- The text in the screenshots is from the Wikipedia article https://ja.wikipedia.org/wiki/%E5%B9%B3%E5%AE%B6%E7%89%A9%E8%AA%9E, Licensed under CC BY-SA 4.0
-https://creativecommons.org/licenses/by-sa/4.0/
+- The text in the screenshots is from the Wikipedia articles https://ja.wikipedia.org/wiki/%E5%B9%B3%E5%AE%B6%E7%89%A9%E8%AA%9E and https://ja.wikipedia.org/wiki/%E5%82%B7%E7%89%A9%E8%AA%9E,<br/>Licensed under CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+
 - Online dictionary lookup powered by Jisho.org
 Dictionary data from JMdict/EDICT and KANJIDIC
 © The Electronic Dictionary Research and Development Group.
