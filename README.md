@@ -14,11 +14,11 @@ Supports extensive customization of the reading experience, such as horizontal v
 <table>
   <tr>
     <td><img src="Images/library.png" width="300" alt="Library"></td>
-    <td><img src="Images/book.png" width="300" alt="Book Reader"></td>
+    <td><img src="Images/book2.png" width="300" alt="Book with Image"></td>
   </tr>
   <tr>
     <td><img src="Images/dialog.png" width="300" alt="Dialog"></td>
-    <td><img src="Images/book2.png" width="300" alt="Book with Image"></td>
+    <td><img src="Images/book.png" width="300" alt="Book Reader"></td>
   </tr>
 </table>
 
