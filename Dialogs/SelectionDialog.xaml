@@ -3,7 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:local="using:Shinobu.Controls"
     mc:Ignorable="d"
     MaxWidth="600"
     MinWidth="600"
@@ -29,7 +31,7 @@
                 <!-- Navigation items -->
                 <NavigationView.MenuItems>
                     <NavigationViewItem Content="Dictionary" Tag="Dictionary" Icon="TwoPage" />
-                    <NavigationViewItem Content="Translate" Tag="Translate" Icon="Globe" />
+                    <NavigationViewItem Content="Translate" Tag="Translate" Icon="Globe" x:Name="TranslateNavViewItem"/>
                     <NavigationViewItem Content="AI" Tag="AI" Icon="Contact" x:Name="AINavViewItem" />
                 </NavigationView.MenuItems>
 
@@ -172,19 +174,7 @@
 
                     <!-- AI page -->
                     <Grid x:Name="AIPage" Margin="10" Visibility="Collapsed">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <ScrollViewer Grid.Row="0">
-                            <StackPanel x:Name="ChatStackPanel" />
-                        </ScrollViewer>
-
-                        <TextBox
-                Grid.Row="1"
-                x:Name="ExplainTextBox"
-                Margin="0,10,0,0" />
+                        <local:LLMChatControl x:Name="ChatControl" />
                     </Grid>
 
                 </Grid>

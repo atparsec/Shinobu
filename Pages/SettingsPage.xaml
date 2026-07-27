@@ -69,15 +69,12 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                        <TextBlock Text="Select AI Provider" VerticalAlignment="Center" Width="160" />
-                        <ComboBox x:Name="AIProviderComboBox" Width="200" SelectionChanged="AIProviderComboBox_SelectionChanged">
-                            <ComboBoxItem Content="Grok" />
-                            <ComboBoxItem Content="OpenAI" />
-                        </ComboBox>
+                        <TextBlock Text="LLM URL" VerticalAlignment="Center" Width="160" />
+                        <TextBox x:Name="LLMUrlTextBox" Width="420" PlaceholderText="http://localhost:5000" TextChanged="LLMUrlTextBox_TextChanged" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                        <TextBlock Text="Enter API Key" VerticalAlignment="Center" Width="160" />
+                        <TextBlock Text="API Key (optional)" VerticalAlignment="Center" Width="160" />
                         <PasswordBox x:Name="ApiKeyBox" Width="420" PlaceholderText="Paste API key here" PasswordChanged="ApiKeyBox_PasswordChanged" />
                     </StackPanel>
                 </StackPanel>

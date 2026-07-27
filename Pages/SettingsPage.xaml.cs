@@ -26,7 +26,7 @@ namespace Shinobu.Pages
         {
             public const string Theme = "Theme";
             public const string AIEnabled = "AIEnabled";
-            public const string AIProvider = "AIProvider";
+            public const string LLMUrl = "LLMUrl";
             public const string ApiKey = "ApiKey";
             public const string Dictionary = "Dictionary";
             public const string LibraryFolder = "LibraryFolder";
@@ -72,22 +72,19 @@ namespace Shinobu.Pages
             {
                 EnableAIFeaturesToggle.IsOn = false;
             }
-            AIProviderComboBox.IsEnabled = EnableAIFeaturesToggle.IsOn;
+            LLMUrlTextBox.IsEnabled = EnableAIFeaturesToggle.IsOn;
             ApiKeyBox.IsEnabled = EnableAIFeaturesToggle.IsOn;
 
-            // AI Provider
-            if (_localSettings.Values.TryGetValue(SettingKeys.AIProvider, out var p) && p is string ps)
+            // LLM URL
+            string defaultUrl = "http://localhost:5000";
+            if (_localSettings.Values.TryGetValue(SettingKeys.LLMUrl, out var u) && u is string url && !string.IsNullOrWhiteSpace(url))
             {
-                AIProviderComboBox.SelectedIndex = ps switch
-                {
-                    "Grok" => 0,
-                    "OpenAI" => 1,
-                    _ => 0
-                };
+                LLMUrlTextBox.Text = url;
             }
             else
             {
-                AIProviderComboBox.SelectedIndex = 0;
+                LLMUrlTextBox.Text = defaultUrl;
+                _localSettings.Values[SettingKeys.LLMUrl] = defaultUrl;
             }
 
             ApiKeyBox.Password = _localSettings.Values.TryGetValue(SettingKeys.ApiKey, out var k) ? k as string ?? string.Empty : string.Empty;
@@ -125,8 +122,7 @@ namespace Shinobu.Pages
 
             _localSettings.Values[SettingKeys.AIEnabled] = EnableAIFeaturesToggle.IsOn;
 
-            var provider = AIProviderComboBox.SelectedItem is ComboBoxItem pic && pic.Content is string ps ? ps : "Grok";
-            _localSettings.Values[SettingKeys.AIProvider] = provider;
+            _localSettings.Values[SettingKeys.LLMUrl] = LLMUrlTextBox.Text;
 
             _localSettings.Values[SettingKeys.ApiKey] = ApiKeyBox.Password;
 
@@ -233,13 +229,13 @@ namespace Shinobu.Pages
             if (_isLoading) return;
 
             var enabled = EnableAIFeaturesToggle.IsOn;
-            AIProviderComboBox.IsEnabled = enabled;
+            LLMUrlTextBox.IsEnabled = enabled;
             ApiKeyBox.IsEnabled = enabled;
 
             SaveSettings();
         }
 
-        private void AIProviderComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void LLMUrlTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             SaveSettings();
         }

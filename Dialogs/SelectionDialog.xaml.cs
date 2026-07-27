@@ -30,11 +30,12 @@ namespace Shinobu.Dialogs
             string trimmed = selectedText.Length > 5 ? selectedText[..5] + "..." : selectedText;
             SelectedWordText.Text = trimmed;
 
-            ExplainTextBox.Text = "Explain: " + selectedText;
+            if (ChatControl != null)
+            {
+                ChatControl.SelectedText = selectedText;
+            }
 
             ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
-            string aiProvider = settings.Values.TryGetValue("AIProvider", out object? p) && p is string s ? s : "";
-            AINavViewItem.Content = aiProvider;
 
             bool aiEnabled = settings.Values.TryGetValue("AIEnabled", out object? enabled) && enabled is bool b && b;
             AINavViewItem.Visibility = aiEnabled ? Visibility.Visible : Visibility.Collapsed;
@@ -45,7 +46,23 @@ namespace Shinobu.Dialogs
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            await ShowDictionaryPage();
+            if (SelectedText.Length > 20)
+            {
+                ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
+                bool aiEnabled = settings.Values.TryGetValue("AIEnabled", out object? enabled) && enabled is bool b && b;
+                if (aiEnabled)
+                {
+                    MainNavigationView.SelectedItem = AINavViewItem;
+                }
+                else
+                {
+                    MainNavigationView.SelectedItem = TranslateNavViewItem;
+                }
+            }
+            else
+            {
+                await ShowDictionaryPage();
+            }
         }
 
         private async Task LoadDictionaryDefinition(string word)
@@ -126,6 +143,10 @@ namespace Shinobu.Dialogs
 
                     case "AI":
                         AIPage.Visibility = Visibility.Visible;
+                        if (ChatControl != null)
+                        {
+                            ChatControl.SelectedText = SelectedText;
+                        }
                         break;
                 }
             }
