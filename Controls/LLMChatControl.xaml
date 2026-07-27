@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Shinobu.Controls.LLMChatControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    MinHeight="300">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="SelectedTextHeader" Grid.Row="0" Margin="8,8,8,8" TextWrapping="Wrap" Visibility="Collapsed" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="8,0,8,8">
+            <Button x:Name="ExplainEnglishButton" Content="Explain in English" Click="ExplainEnglishButton_Click" IsEnabled="False" />
+            <Button x:Name="ExplainJapaneseButton" Content="Explain in Japanese" Click="ExplainJapaneseButton_Click" IsEnabled="False" />
+            <Button x:Name="TranslateButton" Content="Translate" Click="TranslateButton_Click" IsEnabled="False" />
+            <ComboBox x:Name="ModelComboBox"
+                      Grid.Column="1"
+                      Margin="8,0,0,0"
+                      MinWidth="100"
+                      IsEnabled="False" />
+        </StackPanel>
+
+        <ScrollViewer x:Name="ChatScrollViewer"
+                      Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="8">
+            <StackPanel x:Name="MessagesPanel" Spacing="8" />
+        </ScrollViewer>
+
+        <Grid Grid.Row="3" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="InputTextBox"
+                     PlaceholderText="Ask AI..."
+                     KeyDown="InputTextBox_KeyDown"
+                     IsEnabled="False" />
+
+            <Button x:Name="SendButton"
+                    Grid.Column="2"
+                    Margin="8,0,0,0"
+                    Click="SendButton_Click"
+                    ToolTipService.ToolTip="Send"
+                    IsEnabled="False">
+                <FontIcon Glyph="&#xE122;" FontSize="16" />
+            </Button>
+
+            <Button x:Name="ClearButton"
+                    Grid.Column="3"
+                    Margin="4,0,0,0"
+                    Click="ClearButton_Click"
+                    ToolTipService.ToolTip="Clear chat history">
+                <FontIcon Glyph="&#xE74D;" FontSize="16" />
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>
