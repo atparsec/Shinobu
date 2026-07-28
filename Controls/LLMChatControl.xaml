@@ -19,8 +19,8 @@
         <TextBlock x:Name="SelectedTextHeader" Grid.Row="0" Margin="8,8,8,8" TextWrapping="Wrap" Visibility="Collapsed" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="8,0,8,8">
-            <Button x:Name="ExplainEnglishButton" Content="Explain in English" Click="ExplainEnglishButton_Click" IsEnabled="False" />
-            <Button x:Name="ExplainJapaneseButton" Content="Explain in Japanese" Click="ExplainJapaneseButton_Click" IsEnabled="False" />
+            <Button x:Name="ExplainEnglishButton" Content="Explain (English)" Click="ExplainEnglishButton_Click" IsEnabled="False" />
+            <Button x:Name="ExplainJapaneseButton" Content="Explain in (Japanese)" Click="ExplainJapaneseButton_Click" IsEnabled="False" />
             <Button x:Name="TranslateButton" Content="Translate" Click="TranslateButton_Click" IsEnabled="False" />
             <ComboBox x:Name="ModelComboBox"
                       Grid.Column="1"
@@ -40,6 +40,7 @@
         <Grid Grid.Row="3" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>

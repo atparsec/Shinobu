@@ -37,6 +37,18 @@ public sealed partial class LLMChatControl : UserControl
         }
     }
 
+    private string _fileName = "N/A";
+    public string FileName {
+        get => _fileName;
+        set
+        {
+            if (_fileName != value)
+            {
+                _fileName = value ?? "N/A";
+            }
+        }
+    } 
+
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         _initialized = true;
@@ -181,7 +193,7 @@ public sealed partial class LLMChatControl : UserControl
 
         bool isFirstSend = !HasAiResponse();
         string toSend = isFirstSend
-            ? $"Selection Text: \"{_selectedText}\"\n\nInstruction: {userInput}"
+            ? $"Source: \"{_fileName}\"\n\nSelection Text: \"{_selectedText}\"\n\nInstruction: {userInput}"
             : userInput;
 
         InputTextBox.Text = string.Empty;
@@ -258,7 +270,7 @@ public sealed partial class LLMChatControl : UserControl
                 "AI" => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
                 _ => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorSecondaryBrush"]
             },
-            CornerRadius = new CornerRadius(6),
+            CornerRadius = new CornerRadius(12),
             Padding = new Thickness(10, 6, 10, 6),
             Margin = new Thickness(0, 2, 0, 2),
             Child = new TextBlock
