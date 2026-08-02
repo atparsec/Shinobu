@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Dictionary
 {
 
     public enum JlptLevel
@@ -39,3 +39,4 @@ namespace Shinobu.Helpers
         }
     }
 }
+

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Dictionary
 {
     public interface IJapaneseDictionary
     {
@@ -24,3 +24,5 @@ namespace Shinobu.Helpers
         public List<string> Tags { get; set; } = tags;
     }
 }
+
+

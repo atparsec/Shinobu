@@ -2,6 +2,11 @@ using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
@@ -135,3 +140,4 @@ public sealed partial class BookmarksPage : Page, ISearchProvider, INotifyProper
         IsBookmarksEmpty = !(BookmarksListView.ItemsSource as System.Collections.IEnumerable)?.Cast<object>().Any() ?? true;
     }
 }
+

@@ -1,12 +1,19 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
-using Shinobu.Dialogs;
+using Shinobu.Dialogs.Common;
+using Shinobu.Dialogs.Reader;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using Shinobu.Helpers;
 using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -25,12 +32,14 @@ namespace Shinobu.Pages
 {
     public sealed partial class ReaderPage : Page, INotifyPropertyChanged
     {
-        private string _bookHash = string.Empty;
-        private List<int> _pages = [];
+        private string _bookPath = string.Empty;
+        private int _currentLogicalPage = 0; // 0-based for UI display
+        private int _totalLogicalPages = 1;
 
-        private int _currentPage = 0;
         private bool _isDialogShowing = false;
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        private ReaderController? _controller;
         private FuriganaGenerator _furiganaGenerator = new();
         private JlptLevel _userJlptLevel;
         private bool _isVerticalText;
@@ -40,14 +49,12 @@ namespace Shinobu.Pages
         private double _pageMargin;
         private string _theme = "System";
         private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
-        private BookContent _bookContent = new();
         private ReaderThemeManager _themeManager = new();
         private string _currentThemeName;
 
-        private TaskCompletionSource? _pagesLoaded;
-        public bool CanGoPrev => _currentPage > 0;
-        public bool CanGoNext => _currentPage < _pages.Count - 1;
-        public string PageText => $"{_currentPage + 1} / {_pages.Count}";
+        public bool CanGoPrev => _currentLogicalPage > 0;
+        public bool CanGoNext => _currentLogicalPage < _totalLogicalPages - 1;
+        public string PageText => $"{_currentLogicalPage + 1} / {_totalLogicalPages}";
         public List<JlptLevel> JlptLevels { get; } = [.. Enum.GetValues<JlptLevel>()];
 
         public bool IsVerticalText
@@ -59,10 +66,7 @@ namespace Shinobu.Pages
                 {
                     _isVerticalText = value;
                     _settings.Values["IsVerticalText"] = value;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(IsVerticalText));
                 }
             }
@@ -77,10 +81,7 @@ namespace Shinobu.Pages
                 {
                     _fontSize = value;
                     _settings.Values["FontSize"] = value;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(ReaderFontSize));
                 }
             }
@@ -95,10 +96,7 @@ namespace Shinobu.Pages
                 {
                     _lineHeight = value;
                     _settings.Values["LineHeight"] = value;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(LineHeight));
                 }
             }
@@ -113,10 +111,7 @@ namespace Shinobu.Pages
                 {
                     _readerFont = value;
                     _settings.Values["FontFamily"] = value.Source;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(ReaderFont));
                 }
             }
@@ -131,10 +126,7 @@ namespace Shinobu.Pages
                 {
                     _pageMargin = value;
                     _settings.Values["PageMargin"] = value;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(ReaderMargin));
                 }
             }
@@ -149,10 +141,7 @@ namespace Shinobu.Pages
                 {
                     _userJlptLevel = value;
                     _settings.Values["JlptLevel"] = (int)value;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(UserJlptLevel));
                 }
             }
@@ -167,10 +156,7 @@ namespace Shinobu.Pages
                 {
                     _currentThemeName = value;
                     _settings.Values["ReaderTheme"] = value;
-                    if (!string.IsNullOrEmpty(_bookHash))
-                    {
-                        _ = RenderBook(_bookHash);
-                    }
+                    _ = RefreshCurrentPageAsync();
                     OnPropertyChanged(nameof(ReaderThemeName));
                 }
             }
@@ -215,56 +201,15 @@ namespace Shinobu.Pages
 
         private async void ReaderWebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
         {
-            await sender.ExecuteScriptAsync($@"
-                if (!window.__selectionListenerAttached) {{
-                    document.addEventListener('mouseup', function () {{
-                        var selection = window.getSelection();
+            await Task.CompletedTask;
+        }
 
-                        if (selection.rangeCount) {{
-                            var range = selection.getRangeAt(0);
-                            var fragment = range.cloneContents();
-
-                            fragment.querySelectorAll('.fg').forEach(el => el.remove());
-
-                            var selectedText = fragment.textContent;
-                            if (selectedText.trim()) {{
-                                var bodyText = document.body.textContent || document.body.innerText;
-                                var startOffset = getTextOffset(document.body, range.startContainer, range.startOffset);
-                                window.chrome.webview.postMessage('selected:' + startOffset + ':' + selectedText);
-                            }}
-                        }}
-                    }});
-                    document.addEventListener('keydown', function (event) {{
-                        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {{
-                            window.chrome.webview.postMessage('nav: next');
-                            event.preventDefault();
-                        }} else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {{
-                            window.chrome.webview.postMessage('nav: prev');
-                            event.preventDefault();
-                        }}
-                    }});
-                    document.addEventListener('wheel', function (event) {{
-                        if (event.deltaY > 0) {{
-                            window.chrome.webview.postMessage('nav: next');
-                        }} else if (event.deltaY < 0) {{
-                            window.chrome.webview.postMessage('nav: prev');
-                        }}
-                    }});
-                    function getTextOffset(root, node, offset) {{
-                        var text = '';
-                        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
-                        var currentNode;
-                        while (currentNode = walker.nextNode()) {{
-                            if (currentNode === node) {{
-                                return text.length + offset;
-                            }}
-                            text += currentNode.textContent;
-                        }}
-                        return text.length;
-                    }}
-                    window.__selectionListenerAttached = true;
-                }}
-            ");
+        private async void ReaderWebView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_controller != null && ReaderWebView.CoreWebView2 != null)
+            {
+                await RenderCurrentPageAsync();
+            }
         }
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -272,45 +217,73 @@ namespace Shinobu.Pages
             await _themeManager.LoadAsync();
 
             ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
-
             _ = anim?.TryStart(ReaderWebView);
 
             await ReaderWebView.EnsureCoreWebView2Async();
             ReaderWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-            ReaderWebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+            ReaderWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+            ReaderWebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
+
+            ReaderWebView.SizeChanged -= ReaderWebView_SizeChanged;
+            ReaderWebView.SizeChanged += ReaderWebView_SizeChanged;
 
             LoadingRing.Visibility = Visibility.Visible;
 
-            if (e.Parameter is string param)
+            try
             {
-                string[] parts = param.Split(';');
-                _bookHash = parts[0];
-                await LoadBook();
-                await _pagesLoaded!.Task;
-
-                LoadingRing.Visibility = Visibility.Collapsed;
-
-                if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum))
+                if (e.Parameter is string param && !string.IsNullOrWhiteSpace(param))
                 {
-                    await GoToPage(Math.Min(pageNum, _pages.Count - 1));
+                    string[] parts = param.Split(';');
+                    _bookPath = parts[0];
+
+                    await LoadDocumentAsync();
+
+                    LoadingRing.Visibility = Visibility.Collapsed;
+
+                    if (parts.Length > 1 && int.TryParse(parts[1], out int pageNum) && pageNum > 0)
+                    {
+                        for (int i = 0; i < pageNum - 1 && CanGoNext; i++)
+                        {
+                            await TryGoNextAsync();
+                        }
+                    }
+
+                    if (parts.Length > 4 &&
+                        int.TryParse(parts[2], out int offset) &&
+                        int.TryParse(parts[3], out int endOffset) &&
+                        int.TryParse(parts[4], out int pageNo))
+                    {
+                        await SelectTextAtOffsetAsync(offset, Math.Max(0, endOffset - offset));
+                    }
                 }
-                if (parts.Length > 4 && int.TryParse(parts[2], out int offset) && int.TryParse(parts[3], out int endOffset) && int.TryParse(parts[4], out int pageNo))
+                else
                 {
-                    await GoToPage(Math.Min(pageNo, _pages.Count - 1));
-                    await SelectTextAtOffsetAsync(offset, endOffset);
+                    (string? sessionHash, int sessionPage) = ReaderSessionManager.GetSession();
+                    if (!string.IsNullOrEmpty(sessionHash) && File.Exists(sessionHash))
+                    {
+                        _bookPath = sessionHash;
+                        await LoadDocumentAsync();
+
+                        for (int i = 0; i < sessionPage && CanGoNext; i++)
+                        {
+                            await TryGoNextAsync();
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(_bookPath) && File.Exists(_bookPath))
+                    {
+                        await LoadDocumentAsync();
+                    }
+
+                    LoadingRing.Visibility = Visibility.Collapsed;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                (string? sessionHash, int sessionPage) = ReaderSessionManager.GetSession();
-                if (sessionHash != null && BookManager.GetBookByHash(sessionHash) != null)
-                {
-                    _bookHash = sessionHash;
-                    await LoadBook();
-                    await GoToPage(sessionPage);
-                }
-
                 LoadingRing.Visibility = Visibility.Collapsed;
+                if (ReaderWebView.CoreWebView2 != null)
+                {
+                    ReaderWebView.CoreWebView2.NavigateToString($"<html><body style='color:red;padding:20px;font-family:sans-serif;'>{System.Net.WebUtility.HtmlEncode(ex.Message)}</body></html>");
+                }
             }
 
             if (App.MainWindowInstance is MainWindow mainWindow)
@@ -322,124 +295,264 @@ namespace Shinobu.Pages
 
         private async Task SelectTextAtOffsetAsync(int offset, int length)
         {
+            // Best-effort selection within the current per-page HTML.
+            // Offsets are relative to the current page's text content only.
             await ReaderWebView.ExecuteScriptAsync($@"
-                var range = document.createRange();
-                var selection = window.getSelection();
-                function getTextNodeAtOffset(root, offset) {{
-                    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
-                    var currentNode;
-                    var currentOffset = 0;
-                    while (currentNode = walker.nextNode()) {{
-                        var nodeLength = currentNode.textContent.length;
-                        if (currentOffset + nodeLength >= offset) {{
-                            return {{ node: currentNode, offset: offset - currentOffset }};
+                try {{
+                    var range = document.createRange();
+                    var selection = window.getSelection();
+                    function getTextNodeAtOffset(root, targetOffset) {{
+                        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                        var currentNode;
+                        var currentOffset = 0;
+                        while (currentNode = walker.nextNode()) {{
+                            var nodeLength = currentNode.textContent.length;
+                            if (currentOffset + nodeLength >= targetOffset) {{
+                                return {{ node: currentNode, offset: targetOffset - currentOffset }};
+                            }}
+                            currentOffset += nodeLength;
                         }}
-                        currentOffset += nodeLength;
+                        return null;
                     }}
-                    return null;
-                }}
-                var startInfo = getTextNodeAtOffset(document.body, {offset});
-                var endInfo = getTextNodeAtOffset(document.body, {offset + length});
-                if (startInfo && endInfo) {{
-                    range.setStart(startInfo.node, startInfo.offset);
-                    range.setEnd(endInfo.node, endInfo.offset);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }}");
+                    var startInfo = getTextNodeAtOffset(document.body, {offset});
+                    var endInfo = getTextNodeAtOffset(document.body, {offset + Math.Max(0, length)});
+                    if (startInfo && endInfo) {{
+                        range.setStart(startInfo.node, startInfo.offset);
+                        range.setEnd(endInfo.node, endInfo.offset);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }}
+                }} catch(e) {{ /* ignore */ }}
+            ");
         }
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            if (!string.IsNullOrEmpty(_bookHash))
+            if (!string.IsNullOrEmpty(_bookPath))
             {
-                ReaderSessionManager.SaveSession(_bookHash, _currentPage);
+                ReaderSessionManager.SaveSession(_bookPath, _currentLogicalPage);
             }
             base.OnNavigatingFrom(e);
             ReaderWebView.NavigationCompleted -= ReaderWebView_NavigationCompleted;
             ReaderWebView.WebMessageReceived -= OnWebMessageReceived;
+
+            if (_controller != null)
+            {
+                _ = _controller.DisposeAsync().AsTask();
+                _controller = null;
+            }
         }
 
-        private async Task LoadBook()
+        private async Task LoadDocumentAsync()
         {
-            _bookContent = await BookManager.LoadBookContentAsync(_bookHash);
+            if (string.IsNullOrEmpty(_bookPath))
+                return;
 
-            _pagesLoaded = new TaskCompletionSource();
-            await RenderBook(_bookHash);
+            string filePath = _bookPath;
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("The selected book file could not be found.", filePath);
+            }
+
+            string ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+            IBookDocument document = ext switch
+            {
+                ".txt" => new TxtDocument(filePath),
+                ".pdf" => new PdfDocument(filePath),
+                _ => throw new NotSupportedException($"Unsupported file type: {ext}")
+            };
+
+            // Dispose previous controller if any
+            if (_controller != null)
+            {
+                await _controller.DisposeAsync();
+            }
+
+            _controller = new ReaderController(document, _furiganaGenerator);
+
+            BookLocation? startLoc = null;
+
+            await _controller.InitializeAsync(startLoc);
+
+            _totalLogicalPages = _controller.TotalPages ?? 1;
+            _currentLogicalPage = 0;
+            OnPropertyChanged(nameof(CanGoPrev));
+            OnPropertyChanged(nameof(CanGoNext));
+            OnPropertyChanged(nameof(PageText));
+
+            await RenderCurrentPageAsync();
         }
 
-        private async Task RenderBook(string bookHash)
+        private async Task RenderCurrentPageAsync()
         {
-            string htmlSettings = $"{_userJlptLevel}";
-            string htmlHash = ComputeSettingsHash(htmlSettings);
-            string bookDir = BookManager.GetBookDirectory(bookHash);
-            string htmlFile = Path.Combine(bookDir, $"{bookHash}_{htmlHash}.html");
-            string cssFile = Path.Combine(Path.GetTempPath(), "shinobu", "shinobu_styles.css");
+            if (_controller == null || ReaderWebView.CoreWebView2 == null)
+                return;
 
-            BookTheme currentTheme = CurrentTheme;
-            string cssContent = BookManager.BuildCss(_fontSize, _lineHeight, _readerFont.Source, currentTheme, _isVerticalText, _pageMargin, ReaderWebView.ActualWidth, ReaderWebView.ActualHeight);
-            Directory.CreateDirectory(Path.GetDirectoryName(cssFile)!);
-            await File.WriteAllTextAsync(cssFile, cssContent);
+            BookTheme theme = CurrentTheme;
 
-            if (!File.Exists(htmlFile))
+            double w = ReaderWebView.ActualWidth > 10 ? ReaderWebView.ActualWidth : 900;
+            double h = ReaderWebView.ActualHeight > 10 ? ReaderWebView.ActualHeight : 700;
+
+            string html = await _controller.GetCurrentPageHtmlAsync(
+                _isVerticalText,
+                _fontSize,
+                _lineHeight,
+                _readerFont.Source,
+                theme,
+                _pageMargin,
+                w,
+                h,
+                _userJlptLevel);
+
+            try
             {
-                string htmlContent = await BookManager.BuildHtml(_bookContent, _furiganaGenerator, _userJlptLevel, _isVerticalText, _pageMargin);
-                await File.WriteAllTextAsync(htmlFile, htmlContent);
+                ReaderWebView.CoreWebView2.NavigateToString(html);
+            }
+            catch (ArgumentException ex)
+            {
+                Debug.WriteLine($"NavigateToString failed, retrying without images: {ex.Message}");
+                string noImages = RemoveImageTags(html);
+                try
+                {
+                    ReaderWebView.CoreWebView2.NavigateToString(noImages);
+                }
+                catch (Exception ex2)
+                {
+                    Debug.WriteLine("NavigateToString fallback also failed: " + ex2.Message);
+                    throw;
+                }
             }
 
-            Uri htmlUri = new Uri(htmlFile);
-            if (ReaderWebView.Source == htmlUri)
+            if (_controller != null)
             {
-                ReaderWebView.CoreWebView2.Reload();
+                var loc = _controller.CurrentLocation;
+                if (loc.ChapterIndex > 0 || _totalLogicalPages <= 1)
+                {
+                    _currentLogicalPage = loc.ChapterIndex;
+                }
             }
-            else
-            {
-                ReaderWebView.CoreWebView2.Navigate(htmlFile);
-            }
+
+            OnPropertyChanged(nameof(CanGoPrev));
+            OnPropertyChanged(nameof(CanGoNext));
+            OnPropertyChanged(nameof(PageText));
+        }
+
+        private async Task RefreshCurrentPageAsync()
+        {
+            if (_controller == null) return;
+            await RenderCurrentPageAsync();
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CanGoPrev)
-            {
-                _ = GoToPage(_currentPage - 1);
-            }
+            _ = TryGoPreviousAsync();
         }
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CanGoNext)
-            {
-                _ = GoToPage(_currentPage + 1);
-            }
+            _ = TryGoNextAsync();
         }
 
-        private async Task GoToPage(int page)
+        private async Task<bool> TryGoNextAsync()
         {
-            _currentPage = page;
-            OnPropertyChanged();
-            await ReaderWebView.ExecuteScriptAsync($"goToPage({page});");
-            ReaderWebView.Focus(FocusState.Programmatic);
+            if (_controller == null || !CanGoNext) return false;
+
+            BookTheme theme = CurrentTheme;
+            string? html = await _controller.GoNextAsync(
+                _isVerticalText, _fontSize, _lineHeight, _readerFont.Source,
+                theme, _pageMargin, ReaderWebView.ActualWidth, ReaderWebView.ActualHeight, _userJlptLevel);
+
+            if (html != null && ReaderWebView.CoreWebView2 != null)
+            {
+                try
+                {
+                    ReaderWebView.CoreWebView2.NavigateToString(html);
+                }
+                catch (ArgumentException ex)
+                {
+                    Debug.WriteLine($"NavigateToString failed on next, stripping images: {ex.Message}");
+                    string noImages = RemoveImageTags(html);
+                    ReaderWebView.CoreWebView2.NavigateToString(noImages);
+                }
+                if (_controller != null)
+                {
+                    var loc = _controller.CurrentLocation;
+                    if (_totalLogicalPages > 1 && loc.ChapterIndex >= 0)
+                    {
+                        _currentLogicalPage = loc.ChapterIndex;
+                    }
+                    else
+                    {
+                        _currentLogicalPage++;
+                    }
+                }
+                else
+                {
+                    _currentLogicalPage++;
+                }
+                _currentLogicalPage = Math.Max(0, Math.Min(_currentLogicalPage, _totalLogicalPages - 1));
+                OnPropertyChanged(nameof(CanGoPrev));
+                OnPropertyChanged(nameof(CanGoNext));
+                OnPropertyChanged(nameof(PageText));
+                ReaderWebView.Focus(FocusState.Programmatic);
+                return true;
+            }
+            return false;
+        }
+
+        private async Task<bool> TryGoPreviousAsync()
+        {
+            if (_controller == null || !CanGoPrev) return false;
+
+            BookTheme theme = CurrentTheme;
+            string? html = await _controller.GoPreviousAsync(
+                _isVerticalText, _fontSize, _lineHeight, _readerFont.Source,
+                theme, _pageMargin, ReaderWebView.ActualWidth, ReaderWebView.ActualHeight, _userJlptLevel);
+
+            if (html != null && ReaderWebView.CoreWebView2 != null)
+            {
+                try
+                {
+                    ReaderWebView.CoreWebView2.NavigateToString(html);
+                }
+                catch (ArgumentException ex)
+                {
+                    Debug.WriteLine($"NavigateToString failed on previous, stripping images: {ex.Message}");
+                    string noImages = RemoveImageTags(html);
+                    ReaderWebView.CoreWebView2.NavigateToString(noImages);
+                }
+                if (_controller != null)
+                {
+                    var loc = _controller.CurrentLocation;
+                    if (_totalLogicalPages > 1 && loc.ChapterIndex >= 0)
+                    {
+                        _currentLogicalPage = loc.ChapterIndex;
+                    }
+                    else
+                    {
+                        _currentLogicalPage = Math.Max(0, _currentLogicalPage - 1);
+                    }
+                }
+                else
+                {
+                    _currentLogicalPage = Math.Max(0, _currentLogicalPage - 1);
+                }
+                _currentLogicalPage = Math.Max(0, Math.Min(_currentLogicalPage, _totalLogicalPages - 1));
+                OnPropertyChanged(nameof(CanGoPrev));
+                OnPropertyChanged(nameof(CanGoNext));
+                OnPropertyChanged(nameof(PageText));
+                ReaderWebView.Focus(FocusState.Programmatic);
+                return true;
+            }
+            return false;
         }
 
         private async void OnWebMessageReceived(WebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
             string msg = args.TryGetWebMessageAsString();
 
-            if (msg.StartsWith("pages:"))
-            {
-                string lengthsJson = msg[6..];
-                var lengths = JsonSerializer.Deserialize<List<int>>(lengthsJson);
-                while (lengths != null && lengths.Count > 0 && lengths[^1] == 0)
-                {
-                    lengths.RemoveAt(lengths.Count - 1);
-                }
-                _pages = lengths ?? [];
-                _currentPage = Math.Min(_currentPage, Math.Max(_pages.Count - 1, 0));
-                OnPropertyChanged();
-                _pagesLoaded?.TrySetResult();
-                await GoToPage(_currentPage);
-            }
-            else if (msg.StartsWith("selected:"))
+            if (msg.StartsWith("selected:"))
             {
                 string[] parts = msg["selected:".Length..].Split(':', 2);
                 if (parts.Length == 2 && int.TryParse(parts[0], out int start))
@@ -452,20 +565,24 @@ namespace Shinobu.Pages
                 string direction = msg["nav:".Length..].Trim();
                 if (direction == "next" && CanGoNext)
                 {
-                    await GoToPage(_currentPage + 1);
+                    _ = TryGoNextAsync();
                 }
                 else if (direction == "prev" && CanGoPrev)
                 {
-                    await GoToPage(_currentPage - 1);
+                    _ = TryGoPreviousAsync();
                 }
-            } else if (msg.StartsWith("image:"))
+            }
+            else if (msg.StartsWith("image:"))
             {
-                string imageId = msg["image:".Length..];
-                string? imagePath = BookManager.GetBookImagePathById(_bookHash, imageId);
-                if (imagePath != null)
-                {
-                    Frame.Navigate(typeof(ImageViewerPage), imagePath);
-                }
+                // Images are now rendered via data URLs in HtmlRenderer.
+                // For full-screen view we would need to re-extract the specific image bytes.
+                // As a minimal bridge, we currently ignore deep image navigation or could implement temp extraction here.
+                // For now do nothing to avoid using removed BookManager APIs.
+                await Task.CompletedTask;
+            }
+            else if (msg == "page-ready")
+            {
+                // Per-page HTML finished loading. Could be used for progress.
             }
         }
 
@@ -477,7 +594,13 @@ namespace Shinobu.Pages
             }
 
             _isDialogShowing = true;
-            SelectionDialog dialog = new(start, text.Length, text, _currentPage, _bookHash);
+
+            // Resolve to the actual source file path for bookmarks / future features.
+            string resolvedPath = _bookPath;
+
+            string currentPageText = await GetCurrentPageTextAsync();
+
+            SelectionDialog dialog = new(start, text.Length, text, _currentLogicalPage, resolvedPath, currentPageText);
             Grid overlay = new()
             {
                 Background = new SolidColorBrush(Microsoft.UI.Colors.Black) { Opacity = 0.5 },
@@ -497,6 +620,38 @@ namespace Shinobu.Pages
             (Content as Panel)?.Children.Add(dialog);
             dialog.HorizontalAlignment = HorizontalAlignment.Center;
             dialog.VerticalAlignment = VerticalAlignment.Center;
+        }
+
+        private async Task<string> GetCurrentPageTextAsync()
+        {
+            if (ReaderWebView.CoreWebView2 == null)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                string scriptResult = await ReaderWebView.ExecuteScriptAsync("document.body?.innerText ?? ''");
+                return JsonSerializer.Deserialize<string>(scriptResult) ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private static string RemoveImageTags(string html)
+        {
+            if (string.IsNullOrEmpty(html)) return html;
+            try
+            {
+                // Remove <img ...> tags (simple regex). Keeps other markup intact.
+                return Regex.Replace(html, "<img[^>]*>", string.Empty, RegexOptions.IgnoreCase);
+            }
+            catch
+            {
+                return html;
+            }
         }
 
         private async void PageOptionsButton_Click(object sender, RoutedEventArgs e)
@@ -597,3 +752,4 @@ namespace Shinobu.Pages
         }
     }
 }
+

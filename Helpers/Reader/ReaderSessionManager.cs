@@ -1,6 +1,6 @@
 using Windows.Storage;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Reader
 {
     public static class ReaderSessionManager
     {
@@ -30,3 +30,5 @@ namespace Shinobu.Helpers
         }
     }
 }
+
+

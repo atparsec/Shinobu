@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Services
 {
     public interface ISearchProvider
     {
@@ -8,3 +8,5 @@ namespace Shinobu.Helpers
         void OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args);
     }
 }
+
+

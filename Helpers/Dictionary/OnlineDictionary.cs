@@ -1,9 +1,9 @@
-﻿using JishoNET.Models;
+using JishoNET.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Dictionary
 {
     class OnlineDictionary : IJapaneseDictionary
     {
@@ -52,3 +52,5 @@ namespace Shinobu.Helpers
         }
     }
 }
+
+

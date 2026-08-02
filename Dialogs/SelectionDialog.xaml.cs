@@ -3,13 +3,19 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Shinobu.Helpers;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
-namespace Shinobu.Dialogs
+namespace Shinobu.Dialogs.Common
 {
     public sealed partial class SelectionDialog : UserControl
     {
@@ -17,22 +23,26 @@ namespace Shinobu.Dialogs
         public Action? CloseAction { get; set; }
         public int PageNumber { get; set; }
         public string FilePath { get; set; }
+        public string CurrentPageText { get; set; }
         public (int Start, int End) Offset { get; set; }
 
-        public SelectionDialog(int start, int end, string selectedText, int pageNumber, string filePath)
+        public SelectionDialog(int start, int end, string selectedText, int pageNumber, string filePath, string currentPageText)
         {
             SelectedText = selectedText;
             PageNumber = pageNumber;
             FilePath = filePath;
+            CurrentPageText = currentPageText;
             Offset = (start, end);
             InitializeComponent();
 
-            string trimmed = selectedText.Length > 5 ? selectedText[..5] + "..." : selectedText;
+            string trimmed = selectedText.Length > 13 ? selectedText[..13] + "..." : selectedText;
             SelectedWordText.Text = trimmed;
 
             if (ChatControl != null)
             {
                 ChatControl.SelectedText = selectedText;
+                ChatControl.FileName = Path.GetFileName(filePath);
+                ChatControl.CurrentPageText = currentPageText;
             }
 
             ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
@@ -46,7 +56,7 @@ namespace Shinobu.Dialogs
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (SelectedText.Length > 20)
+            if (SelectedText.Length > 8)
             {
                 ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
                 bool aiEnabled = settings.Values.TryGetValue("AIEnabled", out object? enabled) && enabled is bool b && b;
@@ -56,7 +66,7 @@ namespace Shinobu.Dialogs
                 }
                 else
                 {
-                    MainNavigationView.SelectedItem = TranslateNavViewItem;
+                    //MainNavigationView.SelectedItem = TranslateNavViewItem;
                 }
             }
             else
@@ -146,6 +156,8 @@ namespace Shinobu.Dialogs
                         if (ChatControl != null)
                         {
                             ChatControl.SelectedText = SelectedText;
+                            ChatControl.FileName = Path.GetFileName(FilePath);
+                            ChatControl.CurrentPageText = CurrentPageText;
                         }
                         break;
                 }
@@ -209,3 +221,6 @@ namespace Shinobu.Dialogs
         }
     }
 }
+
+
+

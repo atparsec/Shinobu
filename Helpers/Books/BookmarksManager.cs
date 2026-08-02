@@ -7,12 +7,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Books
 {
     public class BookmarksManager
     {
-        private readonly string _filePath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "bookmarks.json");
-
         public ObservableCollection<Bookmark> Bookmarks { get; } = [];
 
         public async Task LoadAsync()
@@ -76,3 +74,4 @@ namespace Shinobu.Helpers
         }
     }
 }
+

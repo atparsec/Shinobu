@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Shinobu.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:local1="using:Shinobu.Helpers.Books"
     mc:Ignorable="d"
     DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
@@ -21,7 +21,7 @@
         <TextBlock Text="Bookmarks" FontSize="32" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,20"/>
         <ListView x:Name="BookmarksListView" SelectionMode="None" Grid.Row="1" HorizontalContentAlignment="Stretch">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Bookmark">
+                <DataTemplate x:DataType="local1:Bookmark">
                     <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
 
                         <Expander.Header>

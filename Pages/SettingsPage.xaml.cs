@@ -1,5 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using Shinobu.Helpers;
 using System;
 using System.Collections.Generic;
@@ -274,3 +279,4 @@ namespace Shinobu.Pages
         }
     }
 }
+

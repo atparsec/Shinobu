@@ -1,6 +1,6 @@
 using System;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Books
 {
     public class BookTheme
     {
@@ -9,3 +9,4 @@ namespace Shinobu.Helpers
         public string Foreground { get; set; } = "#FFF";
     }
 }
+

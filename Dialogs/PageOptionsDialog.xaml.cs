@@ -2,12 +2,17 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using Shinobu.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 
-namespace Shinobu.Dialogs
+namespace Shinobu.Dialogs.Reader
 {
     public sealed partial class PageOptionsDialog : UserControl
     {
@@ -37,7 +42,7 @@ namespace Shinobu.Dialogs
 
         private void InitControls()
         {
-            string[] fonts = ["Segoe UI", "Meiryo", "Yu Gothic"];
+            string[] fonts = ["Segoe UI", "Meiryo", "Yu Gothic", "Arial", "Times New Roman", "Courier New"];
             foreach (string? font in fonts)
             {
                 FontFamilyComboBox.Items.Add(font);
@@ -52,7 +57,7 @@ namespace Shinobu.Dialogs
             double[] lineSpacings = [1.0, 1.15, 1.25, 1.4, 1.5, 1.8, 2.0, 2.25, 2.4, 2.5, 3.0];
             foreach (double spacing in lineSpacings)
             {
-                LineSpacingComboBox.Items.Add($"{spacing:F2}×");
+                LineSpacingComboBox.Items.Add($"{spacing:F2}ï¿½");
             }
 
             string[] margins = ["Small", "Medium", "Large"];
@@ -68,7 +73,7 @@ namespace Shinobu.Dialogs
             VerticalRadio.IsChecked = _readerPage.IsVerticalText;
 
             FontSizeComboBox.SelectedItem = (int)Math.Round(_readerPage.ReaderFontSize);
-            LineSpacingComboBox.SelectedItem = $"{_readerPage.LineHeight:F2}×";
+            LineSpacingComboBox.SelectedItem = $"{_readerPage.LineHeight:F2}ï¿½";
 
             FontFamilyComboBox.SelectedItem = _readerPage.ReaderFont?.Source ?? "Segoe UI";
 
@@ -126,7 +131,7 @@ namespace Shinobu.Dialogs
                 return;
             }
 
-            if (double.TryParse(str.Replace("×", ""), out double value))
+            if (double.TryParse(str.Replace("ï¿½", ""), out double value))
             {
                 _readerPage.LineHeight = value;
             }
@@ -226,3 +231,5 @@ namespace Shinobu.Dialogs
         }
     }
 }
+
+

@@ -6,14 +6,21 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Shinobu.Helpers;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using WinRT.Interop;
@@ -24,6 +31,7 @@ namespace Shinobu.Pages
     {
         private ObservableCollection<BookItem> AllBooks { get; } = [];
         private ObservableCollection<BookItem> FavoriteBooks { get; } = [];
+        private CancellationTokenSource? _thumbnailLoadCts;
 
         public LibraryPage()
         {
@@ -35,62 +43,39 @@ namespace Shinobu.Pages
             await LoadBooksAsync();
         }
 
-        private async Task LoadBooksAsync()
+        private Task LoadBooksAsync()
         {
+            _thumbnailLoadCts?.Cancel();
+            _thumbnailLoadCts?.Dispose();
+            _thumbnailLoadCts = new CancellationTokenSource();
+
             AllBooks.Clear();
             FavoriteBooks.Clear();
 
             List<string> favorites = LoadFavorites();
+            List<BookItem> thumbnailCandidates = [];
+            IEnumerable<string> libraryFiles = LibraryFolderManager.GetSupportedFiles();
 
-            foreach (var entry in BookManager.GetBooks())
+            foreach (string filePath in libraryFiles)
             {
                 BookItem item = new()
                 {
-                    FileName = entry.Title,
-                    Path = entry.Hash,
-                    Extension = System.IO.Path.GetExtension(entry.OriginalFilePath).ToLower(),
-                    IsFavorite = favorites.Contains(entry.Title),
-                    PreviewImagePath = entry.PreviewImagePath
+                    FileName = filePath,
+                    Path = filePath,
+                    Extension = Path.GetExtension(filePath).ToLowerInvariant(),
+                    IsFavorite = favorites.Contains(filePath),
+                    PreviewImagePath = null
                 };
 
-                if (File.Exists(entry.OriginalFilePath))
+                if (File.Exists(filePath))
                 {
-                    FileInfo info = new(entry.OriginalFilePath);
+                    FileInfo info = new(filePath);
                     item.FileSize = info.Length;
                     item.DateModified = info.LastWriteTime.ToShortDateString();
                 }
 
-                if (entry.PreviewImagePath != null)
-                {
-                    item.BackgroundBrush = new ImageBrush
-                    {
-                        ImageSource = new BitmapImage(new Uri(entry.PreviewImagePath)),
-                        Stretch = Stretch.UniformToFill,
-                        Opacity = 1.0
-                    };
-                }
-                else
-                {
-                    string colorHex = UIColorHelper.HashStringToColor(item.FileName);
-                    byte r = byte.Parse(colorHex[1..3], NumberStyles.HexNumber);
-                    byte g = byte.Parse(colorHex[3..5], NumberStyles.HexNumber);
-                    byte b = byte.Parse(colorHex[5..7], NumberStyles.HexNumber);
-                    var gradientColor = Windows.UI.Color.FromArgb(255, r, g, b);
-                    var lighterGradientColor = Windows.UI.Color.FromArgb(255,
-                        (byte)Math.Min(r + 50, 255),
-                        (byte)Math.Min(g + 50, 255),
-                        (byte)Math.Min(b + 50, 255));
-                    item.BackgroundBrush = new LinearGradientBrush
-                    {
-                        StartPoint = new Windows.Foundation.Point(0, 0),
-                        EndPoint = new Windows.Foundation.Point(1, 0),
-                        GradientStops =
-                        {
-                            new GradientStop { Color = gradientColor, Offset =0 },
-                            new GradientStop { Color = lighterGradientColor, Offset = 1 },
-                        }
-                    };
-                }
+                item.BackgroundBrush = CreateFallbackBrush(item.FileName);
+                thumbnailCandidates.Add(item);
 
                 AllBooks.Add(item);
                 if (item.IsFavorite)
@@ -104,6 +89,67 @@ namespace Shinobu.Pages
             UpdateFavoritesVisibility();
             EmptyLibraryPanel.Visibility = AllBooks.Any() ? Visibility.Collapsed : Visibility.Visible;
             LibraryActionsPanel.Visibility = AllBooks.Any() ? Visibility.Visible : Visibility.Collapsed;
+
+            _ = LoadThumbnailsAsync(thumbnailCandidates, _thumbnailLoadCts.Token);
+            return Task.CompletedTask;
+        }
+
+        public void ReloadLibrary()
+        {
+            _ = LoadBooksAsync();
+        }
+
+        private async Task LoadThumbnailsAsync(IEnumerable<BookItem> items, CancellationToken cancellationToken)
+        {
+            foreach (var item in items)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                ImageSource? thumbnail = await TryLoadThumbnailAsync(item.Path);
+                if (thumbnail == null || cancellationToken.IsCancellationRequested)
+                {
+                    continue;
+                }
+
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        item.BackgroundBrush = new ImageBrush
+                        {
+                            ImageSource = thumbnail,
+                            Stretch = Stretch.UniformToFill,
+                            Opacity = 1.0
+                        };
+                    }
+                });
+            }
+        }
+
+        private static LinearGradientBrush CreateFallbackBrush(string fileName)
+        {
+            string colorHex = UIColorHelper.HashStringToColor(fileName);
+            byte r = byte.Parse(colorHex[1..3], NumberStyles.HexNumber);
+            byte g = byte.Parse(colorHex[3..5], NumberStyles.HexNumber);
+            byte b = byte.Parse(colorHex[5..7], NumberStyles.HexNumber);
+            var gradientColor = Windows.UI.Color.FromArgb(255, r, g, b);
+            var lighterGradientColor = Windows.UI.Color.FromArgb(255,
+                (byte)Math.Min(r + 50, 255),
+                (byte)Math.Min(g + 50, 255),
+                (byte)Math.Min(b + 50, 255));
+            return new LinearGradientBrush
+            {
+                StartPoint = new Windows.Foundation.Point(0, 0),
+                EndPoint = new Windows.Foundation.Point(1, 0),
+                GradientStops =
+                {
+                    new GradientStop { Color = gradientColor, Offset = 0 },
+                    new GradientStop { Color = lighterGradientColor, Offset = 1 },
+                }
+            };
         }
 
         private void UpdateFavoritesVisibility()
@@ -120,9 +166,20 @@ namespace Shinobu.Pages
 
         private void SaveFavorites()
         {
-            List<string> favs = AllBooks.Where(b => b.IsFavorite).Select(b => b.FileName).ToList();
+            List<string> favs = AllBooks.Where(b => b.IsFavorite).Select(b => b.Path).ToList();
             string json = JsonSerializer.Serialize(favs);
             ApplicationData.Current.LocalSettings.Values["Favorites"] = json;
+        }
+
+        private static async Task<ImageSource?> TryLoadThumbnailAsync(string filePath)
+        {
+            string ext = Path.GetExtension(filePath).ToLowerInvariant();
+            if (ext != ".pdf" && ext != ".epub")
+            {
+                return null;
+            }
+
+            return await ThumbnailCacheManager.GetThumbnailAsync(filePath);
         }
 
         private void Card_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -188,79 +245,67 @@ namespace Shinobu.Pages
 
         private async Task ImportBooksAsync()
         {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-
-            var hwnd = WindowNative.GetWindowHandle(App.MainWindowInstance);
-            InitializeWithWindow.Initialize(picker, hwnd);
-
-            foreach (var ext in SupportedFileTypes.Extensions.Keys)
+            if (App.MainWindowInstance != null)
             {
-                picker.FileTypeFilter.Add(ext);
-            }
-
-            var files = await picker.PickMultipleFilesAsync();
-            if (files?.Count > 0)
-            {
-                foreach (var file in files)
-                {
-                    await BookManager.CreateBookAsync(file.Path);
-                }
+                await LibraryFolderManager.PickAndCopyFilesAsync(App.MainWindowInstance);
                 await LoadBooksAsync();
             }
         }
         private async Task ImportFolderAsync()
         {
-            var picker = new Windows.Storage.Pickers.FolderPicker();
-            var hwnd = WindowNative.GetWindowHandle(App.MainWindowInstance);
-            InitializeWithWindow.Initialize(picker, hwnd);
-
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
-            picker.FileTypeFilter.Add("*");
-
-            var folder = await picker.PickSingleFolderAsync();
-            if (folder != null)
+            if (App.MainWindowInstance != null)
             {
-                var files = await GetSupportedFilesAsync(folder);
-                foreach (var file in files)
-                {
-                    await BookManager.CreateBookAsync(file.Path);
-                }
+                await LibraryFolderManager.PickAndCopyFolderAsync(App.MainWindowInstance);
                 await LoadBooksAsync();
             }
         }
-
-        private async Task<List<StorageFile>> GetSupportedFilesAsync(StorageFolder folder)
-        {
-            var files = new List<StorageFile>();
-            var items = await folder.GetItemsAsync();
-            foreach (var item in items)
-            {
-                if (item is StorageFile file && SupportedFileTypes.Extensions.ContainsKey(file.FileType.ToLower()))
-                {
-                    files.Add(file);
-                }
-                else if (item is StorageFolder subfolder)
-                {
-                    files.AddRange(await GetSupportedFilesAsync(subfolder));
-                }
-            }
-            return files;
-        }
     }
 
-    internal class BookItem
+    internal class BookItem : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         public string FileName { get; set; } = string.Empty;
         public long FileSize { get; set; }
         public string DateModified { get; set; } = string.Empty;
         public string Path { get; set; } = string.Empty;
-        public bool IsFavorite { get; set; }
+        private bool _isFavorite;
+        public bool IsFavorite
+        {
+            get => _isFavorite;
+            set
+            {
+                if (_isFavorite != value)
+                {
+                    _isFavorite = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public string PreviewText { get; set; } = string.Empty;
         public string? PreviewImagePath { get; set; }
         public bool ShowInfoText => string.IsNullOrEmpty(PreviewImagePath);
-        public Brush BackgroundBrush { get; set; } = new SolidColorBrush(Microsoft.UI.Colors.Gray);
+        private Microsoft.UI.Xaml.Media.Brush _backgroundBrush = new SolidColorBrush(Microsoft.UI.Colors.Gray);
+        public Microsoft.UI.Xaml.Media.Brush BackgroundBrush
+        {
+            get => _backgroundBrush;
+            set
+            {
+                if (!ReferenceEquals(_backgroundBrush, value))
+                {
+                    _backgroundBrush = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public string Extension { get; set; } = string.Empty;
         public string ExtensionName => SupportedFileTypes.Extensions.TryGetValue(Extension, out string? name) ? name : "Unknown";
         public string BookColor => "#22" + UIColorHelper.HashStringToColor(FileName)[1..];
+
+        private void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
+

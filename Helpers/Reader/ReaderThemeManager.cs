@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Shinobu.Helpers.Books;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Reader
 {
     public class ReaderThemeManager
     {
@@ -59,3 +60,4 @@ namespace Shinobu.Helpers
         }
     }
 }
+

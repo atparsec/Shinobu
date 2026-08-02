@@ -4,9 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Shinobu"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d"
-    xmlns:helpers="using:Shinobu.Helpers"
+    xmlns:helpers="using:Shinobu.Helpers" xmlns:helpers1="using:Shinobu.Helpers"
     Loaded="Page_Loaded">
 
     <Page.Resources>
@@ -19,32 +20,18 @@
                 CornerRadius="12"
                 PointerEntered="Card_PointerEntered"
                 PointerExited="Card_PointerExited"
-                Tapped="BookCard_Tapped"
-                >
+                Tapped="BookCard_Tapped">
                 <Border
                     CornerRadius="12"
                     BorderThickness="1"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    Background="{Binding BackgroundBrush}"
-                    >
+                    Background="{Binding BackgroundBrush}">
 
                     <Grid Padding="12">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-
-                        <StackPanel Spacing="6" Padding="12">
-                            <TextBlock
-                                Text="{Binding FileName, Converter={StaticResource FilenameFromPathConverter}}"
-                                FontSize="28"
-                                FontWeight="SemiBold"
-                                MaxLines="2"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="Wrap"
-                                Visibility="{Binding ShowInfoText, Converter={StaticResource BoolToVisibilityConverter}}"
-                                />
-                        </StackPanel>
 
                         <StackPanel
                             Grid.Row="1"
@@ -53,28 +40,34 @@
                             Padding="6"
                             Margin="12,0,0,0"
                             Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-                            CornerRadius="10"
-                            >
-
+                            CornerRadius="10">
                             <TextBlock
+                                Text="{Binding FileName, Converter={StaticResource FilenameFromPathConverter}}"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                MaxLines="2"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="Wrap"
+                                Visibility="{Binding ShowInfoText, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                            <!-- <TextBlock
                                 Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
-                                FontSize="11"
-                                />
+                                FontSize="11"/> -->
 
                             <TextBlock
                                 Text="{Binding ExtensionName}"
                                 FontSize="11"
+                                FontWeight="Bold"
                                 />
 
-                            <TextBlock
+                            <!-- <TextBlock
                                 Text="{Binding DateModified}"
-                                FontSize="11"
-                                />
+                                FontSize="11"/> -->
                         </StackPanel>
 
-                        <Button 
-                            x:Name="FavoriteButton" 
-                            Visibility="Collapsed" 
+                        <Button
+                            x:Name="FavoriteButton"
+                            Visibility="Collapsed"
                             VerticalAlignment="Top"
                             HorizontalAlignment="Right"
                             Height="35"
@@ -83,9 +76,10 @@
                             Margin="0,-10,-10,0"
                             Background="#66000000"
                             CornerRadius="17"
-                            Tapped="FavoriteButton_Tapped"
-                         >
-                            <TextBlock Text="{Binding IsFavorite, Converter={StaticResource BoolToStringConverter}}" FontSize="14" Foreground="Gold"/>
+                            Tapped="FavoriteButton_Tapped">
+                            <TextBlock Text="{Binding IsFavorite, Converter={StaticResource BoolToStringConverter}}"
+                                    FontSize="14"
+                                    Foreground="Gold"/>
                         </Button>
 
                     </Grid>
@@ -94,84 +88,120 @@
                     Width="15"
                     HorizontalAlignment="Left"
                     Background="#33000000"
-                    CornerRadius="12,0,0,12"
-                    />
+                    CornerRadius="12,0,0,12"/>
             </Grid>
         </DataTemplate>
     </Page.Resources>
 
     <Grid Padding="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,20">
+        <Grid Grid.Row="0"
+                Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Text="Library" FontSize="32" FontWeight="Bold" Grid.Column="0"/>
-            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Grid.Column="2" x:Name="LibraryActionsPanel">
+            <TextBlock Text="Library"
+                    FontSize="32"
+                    FontWeight="Bold"
+                    Grid.Column="0"/>
+            <StackPanel Orientation="Horizontal"
+                    Spacing="12"
+                    HorizontalAlignment="Right"
+                    Grid.Column="2"
+                    x:Name="LibraryActionsPanel">
                 <Button Click="ImportButton_Click">
-                    <FontIcon Glyph="&#xE8E5;" />
+                    <FontIcon Glyph="&#xE8E5;"/>
                 </Button>
                 <Button Click="ImportFolderButton_Click">
-                    <FontIcon Glyph="&#xE8F4;" />
+                    <FontIcon Glyph="&#xE8F4;"/>
                 </Button>
-                <Button x:Name="RefreshButton" Click="RefreshButton_Click" BorderThickness="0" ToolTipService.ToolTip="Refresh Library">
-                    <FontIcon Glyph="&#xE72C;" />
+                <Button x:Name="RefreshButton"
+                        Click="RefreshButton_Click"
+                        BorderThickness="0"
+                        ToolTipService.ToolTip="Refresh Library">
+                    <FontIcon Glyph="&#xE72C;"/>
                 </Button>
             </StackPanel>
         </Grid>
 
-        <StackPanel x:Name="FavoritesSection" Grid.Row="1" Visibility="Collapsed" Margin="0,20,0,30">
-            <TextBlock Text="Favorites" FontSize="24" FontWeight="SemiBold" Padding="0,0,0,20"/>
-            <GridView x:Name="FavoritesGrid" SelectionMode="Single" Padding="0">
+        <StackPanel x:Name="FavoritesSection"
+                Grid.Row="1"
+                Visibility="Collapsed"
+                Margin="0,20,0,30">
+            <TextBlock Text="Favorites"
+                    FontSize="24"
+                    FontWeight="SemiBold"
+                    Padding="0,0,0,20"/>
+            <GridView x:Name="FavoritesGrid"
+                    SelectionMode="Single"
+                    Padding="0">
                 <GridView.ItemTemplate>
                     <StaticResource ResourceKey="BookCardTemplate"/>
                 </GridView.ItemTemplate>
             </GridView>
         </StackPanel>
 
-        <TextBlock Grid.Row="2" Text="All Books" FontSize="24" FontWeight="SemiBold" Padding="0,0,0,20" />
+        <TextBlock Grid.Row="2"
+                Text="All Books"
+                FontSize="24"
+                FontWeight="SemiBold"
+                Padding="0,0,0,20"/>
 
         <Grid
-        Grid.Row="3">
+            Grid.Row="3">
 
             <GridView
-            x:Name="BooksGrid"
-            SelectionMode="Single"
-            Padding="0"
-            Visibility="{Binding IsLibraryEmpty, Converter={StaticResource InvertedBoolToVisibilityConverter}}">
+                x:Name="BooksGrid"
+                SelectionMode="Single"
+                Padding="0"
+                Visibility="{Binding IsLibraryEmpty, Converter={StaticResource InvertedBoolToVisibilityConverter}}">
                 <GridView.ItemTemplate>
                     <StaticResource ResourceKey="BookCardTemplate"/>
                 </GridView.ItemTemplate>
 
                 <GridView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <VariableSizedWrapGrid Orientation="Horizontal" />
+                        <VariableSizedWrapGrid Orientation="Horizontal"/>
                     </ItemsPanelTemplate>
                 </GridView.ItemsPanel>
             </GridView>
 
-            <StackPanel 
+            <StackPanel
                 x:Name="EmptyLibraryPanel"
-                Orientation="Vertical" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Center" 
-                Spacing="16"
-                >
-                <FontIcon Glyph="&#xE8F1;" FontSize="60" Opacity="0.6" HorizontalAlignment="Center"/>
-                <TextBlock Text="Library is empty!" FontSize="30" FontWeight="SemiBold" HorizontalAlignment="Center" HorizontalTextAlignment="Center"/>
-                <TextBlock Text="Import or drag txt/pdf/epub files here to get started." FontSize="16" Opacity="0.7" HorizontalAlignment="Center" HorizontalTextAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                    <Button Content="Import" Click="ImportButton_Click" />
-                    <Button Content="Import Folder" Click="ImportFolderButton_Click" />
+                Orientation="Vertical"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="16">
+                <FontIcon Glyph="&#xE8F1;"
+                        FontSize="60"
+                        Opacity="0.6"
+                        HorizontalAlignment="Center"/>
+                <TextBlock Text="Library is empty!"
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center"
+                        HorizontalTextAlignment="Center"/>
+                <TextBlock Text="Import or drag txt/pdf/epub files here to get started."
+                        FontSize="16"
+                        Opacity="0.7"
+                        HorizontalAlignment="Center"
+                        HorizontalTextAlignment="Center"/>
+                <StackPanel Orientation="Horizontal"
+                        Spacing="12"
+                        HorizontalAlignment="Center">
+                    <Button Content="Import"
+                            Click="ImportButton_Click"/>
+                    <Button Content="Import Folder"
+                            Click="ImportFolderButton_Click"/>
                 </StackPanel>
             </StackPanel>
 

@@ -2,6 +2,11 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
+using Shinobu.Helpers.Books;
+using Shinobu.Helpers.Content;
+using Shinobu.Helpers.Dictionary;
+using Shinobu.Helpers.Reader;
+using Shinobu.Helpers.Services;
 using Shinobu.Helpers;
 using Shinobu.Pages;
 using System;
@@ -116,22 +121,13 @@ namespace Shinobu
             {
                 LoadingRing.Visibility = Visibility.Visible;
                 var items = await e.DataView.GetStorageItemsAsync();
-                if (items.Count > 0)
+                var files = items.OfType<StorageFile>().Where(file => SupportedFileTypes.Extensions.ContainsKey(file.FileType.ToLowerInvariant())).ToList();
+                if (files.Count > 0)
                 {
-                    var storageFile = items[0] as StorageFile;
-                    if (storageFile != null)
+                    await LibraryFolderManager.CopyStorageFilesToLibraryAsync(files);
+                    if (navFrame.Content is LibraryPage libraryPage)
                     {
-                        if (SupportedFileTypes.Extensions.ContainsKey(storageFile.FileType.ToLower()))
-                        {
-                            var entry = await BookManager.CreateBookAsync(storageFile.Path);
-                            if (entry != null)
-                            {
-                                if (navFrame.Content is LibraryPage)
-                                {
-                                    navFrame.Navigate(typeof(ReaderPage), entry.Hash);
-                                }
-                            }
-                        }
+                        libraryPage.ReloadLibrary();
                     }
                 }
                 LoadingRing.Visibility = Visibility.Collapsed;
@@ -150,3 +146,4 @@ namespace Shinobu
         }
     }
 }
+

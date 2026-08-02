@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Shinobu.Helpers
 {
@@ -36,3 +36,5 @@ namespace Shinobu.Helpers
         }
     }
 }
+
+

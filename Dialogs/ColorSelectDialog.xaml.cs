@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 
-namespace Shinobu.Dialogs
+namespace Shinobu.Dialogs.Common
 {
     public sealed partial class ColorSelectDialog : UserControl
     {
@@ -22,3 +22,6 @@ namespace Shinobu.Dialogs
         public Windows.UI.Color SelectedColor => ColorPicker.Color;
     }
 }
+
+
+

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Books
 {
     public class Bookmark
     {
@@ -37,3 +37,4 @@ namespace Shinobu.Helpers
         }
     }
 }
+

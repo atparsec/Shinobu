@@ -1,4 +1,5 @@
-﻿using Kawazu;
+using Kawazu;
+using Shinobu.Helpers.Dictionary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Content
 {
     public class FuriganaGenerator
     {
@@ -166,3 +167,5 @@ namespace Shinobu.Helpers
 
     }
 }
+
+

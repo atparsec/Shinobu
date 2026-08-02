@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Shinobu.Helpers
+namespace Shinobu.Helpers.Dictionary
 {
     class LocalDictionary : IJapaneseDictionary
     {
@@ -213,3 +213,5 @@ namespace Shinobu.Helpers
         public required string Text { get; set; }
     }
 }
+
+
