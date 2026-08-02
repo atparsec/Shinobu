@@ -105,14 +105,13 @@ namespace Shinobu.Helpers.Content
                         imageBytes,
                         ext,
                         width,
-                        height)));
+                        height, Guid.NewGuid())));
             }
 
-            return positionedNodes
+            return [.. positionedNodes
                 .OrderByDescending(n => n.Top)
                 .ThenBy(n => n.Left)
-                .Select(n => n.Node)
-                .ToList();
+                .Select(n => n.Node)];
         }
 
         private static UglyToad.PdfPig.Core.PdfRectangle GetLineBounds(IReadOnlyList<PdfPigWord> lineWords)
@@ -191,7 +190,7 @@ namespace Shinobu.Helpers.Content
 
         private static List<List<PdfPigWord>> GroupWordsToLines(List<PdfPigWord> words)
         {
-            if (words.Count == 0) return new List<List<PdfPigWord>>();
+            if (words.Count == 0) return [];
 
             var withMid = words
                 .Select(w => new { Word = w, MidY = (w.BoundingBox.Top + w.BoundingBox.Bottom) / 2.0 })
@@ -213,7 +212,7 @@ namespace Shinobu.Helpers.Content
                 if (Math.Abs(my - y) > yTolerance)
                 {
                     if (current.Count > 0) lines.Add(current);
-                    current = new List<PdfPigWord> { w };
+                    current = [w];
                     y = my;
                 }
                 else
@@ -272,7 +271,7 @@ namespace Shinobu.Helpers.Content
         public async ValueTask<BookMetadata> GetMetadataAsync()
         {
             await EnsureParsedAsync();
-            string title = System.IO.Path.GetFileNameWithoutExtension(_filePath);
+            string title = Path.GetFileNameWithoutExtension(_filePath);
             int total = Math.Max(1, _pages.Count);
             return new BookMetadata(title, null, total);
         }

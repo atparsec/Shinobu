@@ -574,15 +574,7 @@ namespace Shinobu.Pages
             }
             else if (msg.StartsWith("image:"))
             {
-                // Images are now rendered via data URLs in HtmlRenderer.
-                // For full-screen view we would need to re-extract the specific image bytes.
-                // As a minimal bridge, we currently ignore deep image navigation or could implement temp extraction here.
-                // For now do nothing to avoid using removed BookManager APIs.
-                await Task.CompletedTask;
-            }
-            else if (msg == "page-ready")
-            {
-                // Per-page HTML finished loading. Could be used for progress.
+                
             }
         }
 

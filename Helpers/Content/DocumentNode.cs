@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System;
 
 namespace Shinobu.Helpers.Content
 {
@@ -19,7 +20,7 @@ namespace Shinobu.Helpers.Content
 
     public sealed record RubyNode(string BaseText, string RubyText) : DocumentNode;
 
-    public sealed record ImageNode(byte[] Data, string Extension, double Width, double Height) : DocumentNode;
+    public sealed record ImageNode(byte[] Data, string Extension, double Width, double Height, Guid Id) : DocumentNode;
 
     public sealed record LineBreakNode : DocumentNode;
 }

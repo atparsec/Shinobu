@@ -305,7 +305,7 @@ namespace Shinobu.Helpers.Content
                     }
                     string b64 = Convert.ToBase64String(imgBytes);
                     string mime = imgExt.Equals(".png", StringComparison.OrdinalIgnoreCase) ? "png" : "jpeg";
-                    sb.Append($"<img src=\"data:image/{mime};base64,{b64}\" data-image-id=\"{Guid.NewGuid()}\" style=\"cursor:pointer; display:block; max-width:100%; height:auto; margin:0.25em 0; break-inside:avoid; page-break-inside:avoid;\" />");
+                    sb.Append($"<img src=\"data:image/{mime};base64,{b64}\" data-image-id=\"{img.Id}\" style=\"cursor:pointer; display:block; max-width:100%; height:auto; margin:0.25em 0; break-inside:avoid; page-break-inside:avoid;\"/>");
                     break;
 
                 case LineBreakNode:
