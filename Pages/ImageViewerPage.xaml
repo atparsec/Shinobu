@@ -19,7 +19,12 @@
 
         <Grid x:Name="ViewerGrid" Visibility="Collapsed">
             <ScrollViewer Grid.Row="1" x:Name="ImageScrollViewer" HorizontalScrollMode="Auto" VerticalScrollMode="Auto" ManipulationMode="All" PointerPressed="ImageScrollViewer_PointerPressed" PointerMoved="ImageScrollViewer_PointerMoved" PointerReleased="ImageScrollViewer_PointerReleased" PointerWheelChanged="ImageScrollViewer_PointerWheelChanged" >
-                <Image x:Name="ImageControl" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Grid x:Name="ImageContainer">
+                    <Image x:Name="ImageControl" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Canvas x:Name="TextOverlayCanvas"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"/>
+                </Grid>
             </ScrollViewer>
             
             <Button x:Name="PrevButton" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Visibility="Collapsed" Click="PrevButton_Click">
@@ -33,16 +38,14 @@
                 <Button Content="-" Click="ZoomOutButton_Click"/>
                 <Slider x:Name="ZoomSlider" Minimum="0.1" Maximum="5" Value="1" StepFrequency="0.1" ValueChanged="ZoomSlider_ValueChanged" Width="100"/>
                 <Button Content="+" Click="ZoomInButton_Click"/>
-                <Button Click="InvertButton_Click">
-                    <FontIcon Glyph="&#xED66;" FontSize="16"/>
-                </Button>
             </StackPanel>
 
             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}" Opacity="0.9" Padding="10" Spacing="5">
-                <TextBlock x:Name="OcrTextBlock" Text="OCR Text..." TextWrapping="Wrap" FontSize="16"/>
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Button Content="Copy Text" Click="CopyTextButton_Click"/>
                     <Button Content="Save Annotated" Click="SaveAnnotatedButton_Click"/>
+                    <Button Content="Show Furigana" Click="ShowFuriganaButton_Click"/>
+                    <ProgressRing x:Name="OcrProgressRing" IsActive="False"/>
                 </StackPanel>
             </StackPanel>
         </Grid>
